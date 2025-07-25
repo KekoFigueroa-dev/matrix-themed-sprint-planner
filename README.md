@@ -40,6 +40,8 @@ Clone this repository:
 git clone [your-repo-url]
 cd [your-project-folder]
 
+Set ExcecutionPolicy for current session: 
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ​
 Install dependencies:
 npm install
