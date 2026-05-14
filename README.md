@@ -1,18 +1,39 @@
 # Sprint Planner
 
-A web-based sprint planner and task board built with **React** and **TypeScript** for small agile-style teams.
+Web-based sprint planning and tasks for small teams. **V2** targets portfolio-grade polish, **Supabase Auth + Postgres + RLS**, multi-user workspaces, and **Vercel** deployment.
 
-## Features
+## Documentation map (start here)
 
-- **Sprint tracking:** Create, rename, and delete sprints; switch the active sprint and view its tasks.
-- **Tasks:** Add, complete, and delete tasks with **High / Medium / Low** priority and optional assignee.
-- **Team panel:** Add, edit, and remove team members (name + role label for display).
-- **Stats:** Counts for in progress, completed, and total tasks in the current sprint.
-- **UI:** Retro terminal look — dark background, monospace type, green accent styling.
+| Doc | Purpose |
+|-----|--------|
+| **[docs/v2.md](./docs/v2.md)** | Full V2 spec: **progress tracker**, phases 0–5, entities, permission matrix, flows, out-of-scope, Supabase click-steps summary, time estimates |
+| **[docs/rls.md](./docs/rls.md)** | RLS policy model, RPC patterns, testing checklist |
+| **[AGENTS.md](./AGENTS.md)** | Agent rules, handoff habits, **Cursor bootstrap prompt** |
+
+**Agents and contributors:** read [docs/v2.md](./docs/v2.md) first, then update its **Progress tracker** when you stop or ship work.
+
+---
+
+## Current app (main branch)
+
+- **Stack:** React 18, TypeScript, **Create React App** (`react-scripts`), Framer Motion, Lucide, `@supabase/supabase-js` (not wired).
+- **Persistence:** Browser `localStorage` for sprints, todos, and team members.
+- **V2 target stack:** **Next.js** + Supabase — see [docs/v2.md](./docs/v2.md#current-repository-state-vs-v2-read-this-first).
+
+---
+
+## Features (today)
+
+- Sprint CRUD and switcher; tasks with priority and assignee; team sidebar; stats strip; retro terminal styling.
+
+---
 
 ## Project structure
 
 ```text
+docs/
+  ├── v2.md          # V2 spec + progress tracker
+  └── rls.md         # RLS model
 public/
   └── index.html
 src/
@@ -27,69 +48,108 @@ src/
       ├── TeamPanel.tsx
       ├── StatsPanel.tsx
       └── SprintManager.tsx
-tsconfig.json
-package.json
-README.md
 AGENTS.md
-.gitignore
+README.md
+package.json
+tsconfig.json
 ```
 
-## Getting started
+---
 
-Clone the repository:
+## Local setup (CRA — until Next migration)
 
 ```bash
 git clone https://github.com/KekoFigueroa-dev/matrix-themed-sprint-planner.git
 cd matrix-themed-sprint-planner
+npm install
+npm start
 ```
 
-On Windows PowerShell, if scripts are blocked for the session:
+- Dev server: [http://localhost:3000](http://localhost:3000)  
+- Production bundle: `npm run build` → output in `build/`
+
+On Windows PowerShell, if execution policy blocks scripts:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
-Install and run:
+**Note:** If `git status` shows massive `node_modules` changes, this repo may have historically tracked `node_modules`. Run `git restore node_modules` before committing; long-term, remove `node_modules` from git in a dedicated PR. See [AGENTS.md](./AGENTS.md).
 
-```bash
-npm install
-npm start
+---
+
+## Environment variables
+
+### Next.js (V2 target — use after migration)
+
+Create `.env.local` (never commit secrets):
+
+| Variable | Where |
+|----------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same → `anon` `public` key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same → `service_role` key — **server-only** (Route Handlers / server actions). **Never** expose to the browser. |
+
+On **Vercel:** Project → Settings → Environment Variables — add the same names for Production / Preview as needed.
+
+### Create React App (interim)
+
+If Supabase is wired before Next migration, CRA expects:
+
+- `REACT_APP_SUPABASE_URL`
+- `REACT_APP_SUPABASE_ANON_KEY`
+
+Prefer migrating to Next and standardizing on `NEXT_PUBLIC_*` per [docs/v2.md](./docs/v2.md).
+
+---
+
+## Supabase dashboard (short checklist)
+
+1. Create project → enable **Email** provider.  
+2. **Authentication → URL configuration:** set Site URL and Redirect URLs for `http://localhost:3000` and `https://YOUR_VERCEL_DOMAIN` (and `/**` or `/auth/callback` as you implement).  
+3. Run SQL migrations from the repo (when added under e.g. `supabase/migrations/`).  
+4. Confirm RLS is enabled on all tenant tables.
+
+Details and click-flow narrative: [docs/v2.md § Supabase dashboard](./docs/v2.md#supabase-dashboard--click-path-summary).
+
+---
+
+## Architecture (V2 target)
+
+```text
+Browser (Next.js) ──► Supabase Auth (JWT)
+                   ──► Supabase PostgREST ──► Postgres + RLS
 ```
 
-The dev server runs at [http://localhost:3000](http://localhost:3000).
+- **Auth:** Email/password; session available to the client via Supabase JS.  
+- **Data:** Tables in [docs/v2.md](./docs/v2.md#table-sketches-postgres); access enforced by **RLS**.  
+- **Bootstrap / invite edge cases:** Prefer **`SECURITY DEFINER` RPC** (e.g. `ensure_workspace_for_user`, `accept_workspace_invite`) so policies stay tight — see [docs/rls.md](./docs/rls.md).
 
-Production build (used by Vercel and static hosting):
+**Schema summary:** `workspaces`, `workspace_members`, `invites`, `projects`, `sprints`, `tasks` — full field list and relationships in [docs/v2.md](./docs/v2.md#entities-and-relationships).
 
-```bash
-npm run build
-```
+---
 
-Output is written to `build/`.
+## Deployment (Vercel)
 
-## Tech stack
+1. Connect the GitHub repo to Vercel; framework **Next.js** once the app is migrated.  
+2. Set `NEXT_PUBLIC_SUPABASE_*` (and server-only `SUPABASE_SERVICE_ROLE_KEY` only if used).  
+3. Match Supabase **redirect URLs** to the Vercel domain.  
+4. Run through the **Definition of done** in [docs/v2.md](./docs/v2.md#phase-5--deployment--credibility-05-10-h) (sign up, workspace, invite, tasks, negative permission checks).
 
-- React 18  
-- TypeScript  
-- Create React App (`react-scripts`)  
-- Framer Motion  
-- Lucide React  
-- `@supabase/supabase-js` (planned for auth and data; not fully integrated yet)  
-- Global CSS (`src/styles.css`)
+---
 
-## Roadmap and implementation plan
+## Scripts
 
-**Vision (V2):** Portfolio-grade polish (clear hierarchy and spacing, restrained motion) plus subtle terminal / cyberpunk accents — backed by **Supabase Auth**, **shared workspaces**, **RLS-based permissions**, and **Vercel** deployment. No custom backend server.
+| Command | Description |
+|---------|-------------|
+| `npm start` | CRA dev server |
+| `npm run build` | Production build |
+| `npm test` | CRA test runner |
 
-**Agent and step-by-step plan:** See **[AGENTS.md](./AGENTS.md)** for phased PR order, RLS expectations, and constraints for coding agents.
+(Add `lint` / `typecheck` when Next.js and tooling land — tracked in Phase 5 of [docs/v2.md](./docs/v2.md).)
 
-### Goals for the first push
+---
 
-1. Land **documentation** so contributors and agents share the same plan (`README.md` + `AGENTS.md`).
-2. Keep the first push **small**: docs (and optional README/scripty hygiene only — no large refactors unless agreed).
-3. Align on **implementation order** after docs: UI foundation → auth → workspace bootstrap → schema/RLS/CRUD → invites → deploy and README polish.
+## License
 
-Optional follow-ups (not committed as V2 scope) are listed at the bottom of `AGENTS.md`.
-
-## License / contributing
-
-Add a `LICENSE` and contribution notes when you are ready for external contributors.
+See [LICENSE](./LICENSE) in the repository.

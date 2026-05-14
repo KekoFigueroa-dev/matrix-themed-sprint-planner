@@ -1,86 +1,113 @@
 # Agent instructions — matrix-themed sprint planner
 
-This file is for humans and coding agents working in this repository. It states **current goals**, the **step-by-step implementation plan**, and **constraints** so work stays aligned across pushes. Keeping **`AGENTS.md` at the repo root** matches the usual Cursor / open-source convention for agent-oriented guidance (alongside `README.md` for everyone else).
+This file tells **humans and coding agents** how to work in this repo: **non-negotiables**, **where the plan lives**, **how to report progress**, and a **bootstrap prompt** for new Cursor sessions.
 
-## Product direction (V2 target)
+**Canonical V2 plan (phases, DoD, entities, flows, hours):** [docs/v2.md](./docs/v2.md) — **update the progress table there** when you finish a phase or meaningful slice.
 
-Portfolio-grade sprint planner: **Stripe.dev-level polish** (typography, spacing, hierarchy, restrained motion) plus **restrained** 90s terminal / cyberpunk / vaporwave accents (no neon soup).
+**RLS narrative (security model):** [docs/rls.md](./docs/rls.md)
 
-Backend: **Supabase only** — no custom application server. **Row Level Security (RLS)** is the source of truth for permissions; the UI must not be the only enforcement.
+**Human-facing setup / deploy / env:** [README.md](./README.md)
 
-## Current codebase (baseline)
+---
 
-- **Stack:** React 18, TypeScript, Create React App (`react-scripts`), Framer Motion, Lucide, `@supabase/supabase-js` (dependency present; **not wired yet**).
-- **State:** React state in `App.tsx`; **persistence:** `localStorage` for sprints, todos, team members, current sprint.
-- **Model:** `Sprint`, `Todo`, `TeamMember` — no workspace, project, or auth yet. `TeamMember.role` is display text, not RBAC.
+## Non-negotiable rules
 
-## Goals for the **first push** (documentation milestone)
+1. **Read the repo first** before proposing code changes. Scan routing, data layer, styling, and any Supabase usage. Summarize gaps vs [docs/v2.md](./docs/v2.md).
+2. **No custom backend application server** in V2. Use **Supabase Auth + Postgres + RLS** (and **RPC / security definer** where needed). Do not add Express/Fastify/etc. as an app server.
+3. **Design is a deliverable:** stripe.dev-level polish + restrained retro cyberpunk/vaporwave — tokens, spacing, typography, accessible contrast, strong empty/loading/error states.
+4. **Security is a deliverable:** **RLS enforces permissions.** UI hiding buttons is not sufficient.
+5. **V2 stack assumption:** **Next.js + TypeScript** per [docs/v2.md](./docs/v2.md). The repo may still be on **CRA** until migration — if you migrate, do it as an explicit PR and then update the “Current repository state” section in `docs/v2.md`.
 
-1. **Single source of truth for the plan** — `README.md` + this file describe vision, first milestones, and repo layout.
-2. **Clear sequencing** — implementation order is fixed (UI foundation → auth → workspace → data + RLS → invites → deploy/docs).
-3. **Explicit non-goals for V2** — not Jira; no custom backend; framework migration only if explicitly requested.
+---
 
-The first push may be **docs-only** or **docs + tiny hygiene** (for example README formatting, `npm run build` in `package.json`). Avoid bundling large refactors with the first push unless agreed.
+## Progress and handoff (required habit)
 
-## Step-by-step implementation plan (PR-sized)
+- After completing work, set the **Phase** row in [docs/v2.md § Progress tracker](./docs/v2.md#progress-tracker-update-when-work-lands) to `Done` or `In progress` and add **Notes / PR**.
+- If you stop mid-phase, leave status `In progress` and add a short **Notes / PR** bullet: what merged, what is next file-wise.
 
-Execute in this order. Each step should be a **small, reviewable PR** when possible.
+This lets anyone (including you later) **resume from the last documented state**.
 
-### Phase 1 — UI foundation
+---
 
-- Add design **tokens** (CSS variables or `tokens.css`): type scale, spacing, neutrals, one primary accent, one terminal accent.
-- Introduce an **AppShell** layout (header / main / side regions) and shared primitives (`Button`, `Input`, `Select`, `Panel`) under something like `src/ui/`.
-- Migrate existing screens to tokens and shell; **restrain** motion (shorter durations, fewer competing animations).
+## Implementation rhythm (agent + maintainer)
 
-### Phase 2 — Auth pages
-
-- Add routing (for example `react-router-dom`): `/login`, `/register`, and protected app route(s).
-- Configure Supabase client + env (`REACT_APP_*` for CRA); implement email + password sign-in and sign-up with polished UI matching tokens.
-
-### Phase 3 — Workspace bootstrap
-
-- **One workspace per user**, auto-created on first login; that user is **owner**.
-- Idempotent “ensure workspace” behavior (client and/or DB constraints) so duplicates cannot appear.
-
-### Phase 4 — Data model, RLS, CRUD
-
-- Tables (conceptual): workspaces, workspace members (roles: `owner`, `admin`, `member`), projects, sprints, tasks (maps current todo fields; assignees tied to workspace identity as designed).
-- **RLS intent:**
-  - **Owner/admin:** manage projects, sprints, invites (where applicable).
-  - **Member:** CRUD **tasks** only; **read** projects and sprints.
-- Ship SQL migrations in-repo; document each policy’s intent in the migration or a short `docs/rls.md` if policies are long.
-
-### Phase 5 — Invites
-
-- Invite-by-email (no expiry required for V2); admin creates invite; accept-invite flow for the invited user once authenticated.
-
-### Phase 6 — Deploy and polish
-
-- Vercel deploy, `npm run build`, README env/deploy section, screenshots.
-
-## Repository notes
-
-- A **`.gitignore`** at the repo root ignores `build/`, local env files, and (by convention) `node_modules/`. If this clone still has `node_modules` **tracked in git** from an older layout, stop tracking it in a dedicated hygiene PR (`git rm -r --cached node_modules` then push); do not mix that with feature work.
+- **One focused deliverable per step** (one PR-sized slice): code or docs, not a bundle of unrelated features.
+- The agent **implements** the slice, **updates relevant docs** (e.g. `docs/v2.md` progress table, `docs/rls.md` if policies change, README env/architecture when wiring changes), and **writes a clear test plan** (manual steps or commands) in the PR description or in `docs/v2.md` under the phase notes.
+- **Testing is deferred to the maintainer:** the agent does not substitute for you running Supabase checks, browser flows, or Vercel smoke tests unless you explicitly ask.
+- **You choose the next slice:** say which phase or file area to tackle next; the agent should not assume priority beyond what you stated.
 
 ## Working agreements
 
-- Prefer **small commits** and **PR-sized** changes.
-- If adding schema or RLS: include **exact SQL** in the PR and explain policy intent.
-- **Do not** migrate framework (CRA → Vite/Next, etc.) unless the maintainer explicitly asks.
-- Do not invent features beyond the agreed V2 list; extras go in README under “Optional follow-ups” only.
+- Prefer **small commits** and **PR-sized** diffs.
+- Ship **SQL migrations** in-repo with PRs that touch schema; explain policy **intent** (comments or PR description). Link or duplicate rationale in [docs/rls.md](./docs/rls.md) when behavior changes.
+- Do not expand scope into a Jira-like product; out-of-scope list is in [docs/v2.md](./docs/v2.md#out-of-scope-guardrails--do-not-creep).
+- **Repository hygiene:** `node_modules` must not be committed going forward — see [README](./README.md). If history still tracks `node_modules`, use a dedicated PR to remove it from the index.
 
-## Optional follow-ups (not required for V2)
+---
 
-- Realtime task updates, email templates for invites, audit log, project archival.
+## Where to look in the tree (today)
 
-## Where to look in the tree
+| Area        | Location |
+|------------|----------|
+| App / state | `src/App.tsx` (CRA monolith + `localStorage`) |
+| Types      | `src/types.ts` |
+| Styles     | `src/styles.css` |
+| Components | `src/components/*` |
+| Entry      | `src/index.tsx` |
+| V2 docs    | `docs/v2.md`, `docs/rls.md` |
 
-| Area        | Location                          |
-|------------|-----------------------------------|
-| App shell  | `src/App.tsx` (today: monolith)   |
-| Types      | `src/types.ts`                    |
-| Global CSS | `src/styles.css`                  |
-| Components | `src/components/*`                |
-| Entry      | `src/index.tsx`                   |
+After Next.js migration, prefer `app/`, `lib/supabase/`, `supabase/migrations/` — document new paths in `docs/v2.md` when they exist.
 
-Update this file when phases complete or priorities change.
+---
+
+## Cursor bootstrap prompt
+
+Copy everything inside the block into a new Cursor chat when starting V2 implementation work:
+
+```text
+You are the senior engineer + product-minded designer implementing V2 for this repo:
+https://github.com/KekoFigueroa-dev/matrix-themed-sprint-planner
+
+NON-NEGOTIABLE RULES:
+1) READ THE REPO FIRST.
+   Before proposing changes, scan the codebase and write a short summary:
+   - tech stack, routing (CRA vs Next if mixed)
+   - existing data model and persistence
+   - any existing Supabase integration
+   - state management and styling system
+   - gaps vs docs/v2.md
+2) NO CUSTOM BACKEND SERVER IN V2.
+   Use Supabase Auth + Postgres + RLS. Do NOT introduce an extra application server.
+3) DESIGN IS A DELIVERABLE.
+   Target: stripe.dev-level polish + restrained retro cyberpunk/vaporwave.
+   Requirements: typography scale, spacing rhythm, accessible contrast, empty/loading/error states,
+   token layer + reusable UI primitives.
+4) SECURITY IS A DELIVERABLE.
+   RLS must enforce permissions. UI gating is not sufficient.
+
+V2 REQUIREMENTS (see docs/v2.md for detail):
+- Real email/password auth
+- One workspace per user flow; auto-create on first login; user is owner/admin
+- Admin invites collaborators (no invite expiry)
+- Members CRUD tasks; admins manage projects/sprints/invites
+- Deploy to Vercel
+
+WORK PLAN (implement in order — update progress table in docs/v2.md when done):
+Phase 0: repo read + docs aligned
+Phase 1: schema + migrations + RLS (+ docs/rls.md if policies change)
+Phase 2: auth + ensure_workspace RPC
+Phase 3: invites + accept RPC + UI
+Phase 4: role-based UI + collaboration polish + design system
+Phase 5: Vercel + README + optional smoke test
+
+OUTPUT:
+- List exact files to create/modify and why.
+- Keep changes small and reviewable.
+- If uncertain, ask one targeted question instead of guessing.
+```
+
+---
+
+## Optional follow-ups (not V2)
+
+See [docs/v2.md § Optional follow-ups](./docs/v2.md#optional-follow-ups-not-v2).
