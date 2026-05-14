@@ -57,8 +57,9 @@ This lets anyone (including you later) **resume from the last documented state**
 | Components | `src/components/*` |
 | Entry      | `src/index.tsx` |
 | V2 docs    | `docs/v2.md`, `docs/rls.md` |
+| DB SQL     | `supabase/migrations/*.sql` |
 
-After Next.js migration, prefer `app/`, `lib/supabase/`, `supabase/migrations/` — document new paths in `docs/v2.md` when they exist.
+After Next.js migration, prefer `app/` and `lib/supabase/` — keep migrations in `supabase/migrations/` and document path changes in `docs/v2.md`.
 
 ---
 

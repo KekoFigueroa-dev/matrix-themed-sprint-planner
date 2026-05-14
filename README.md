@@ -32,8 +32,11 @@ Web-based sprint planning and tasks for small teams. **V2** targets portfolio-gr
 
 ```text
 docs/
-  ├── v2.md          # V2 spec + progress tracker
-  └── rls.md         # RLS model
+  ├── v2.md          # V2 spec + progress tracker + maintainer test plans
+  └── rls.md         # RLS model (+ link to migration SQL)
+supabase/
+  └── migrations/
+      └── 20250514130000_initial_schema_workspaces_rls.sql
 public/
   └── index.html
 src/
@@ -107,8 +110,10 @@ Prefer migrating to Next and standardizing on `NEXT_PUBLIC_*` per [docs/v2.md](.
 
 1. Create project → enable **Email** provider.  
 2. **Authentication → URL configuration:** set Site URL and Redirect URLs for `http://localhost:3000` and `https://YOUR_VERCEL_DOMAIN` (and `/**` or `/auth/callback` as you implement).  
-3. Run SQL migrations from the repo (when added under e.g. `supabase/migrations/`).  
+3. Run SQL migrations from the repo (`supabase/migrations/`). Open **`20250514130000_initial_schema_workspaces_rls.sql`**, copy into SQL Editor, run once.  
 4. Confirm RLS is enabled on all tenant tables.
+
+**After applying:** follow **Phase 1: Maintainer test plan** in [docs/v2.md](./docs/v2.md#phase-1-maintainer-test-plan-after-applying-sql).
 
 Details and click-flow narrative: [docs/v2.md § Supabase dashboard](./docs/v2.md#supabase-dashboard--click-path-summary).
 
