@@ -1,31 +1,27 @@
-Sprint Planner
-A web-based Sprint Planner and TODO application, built with React and TypeScript, designed for developer teams working in agile environments.
-Features
-🏁 Sprint Tracking:
-Create, edit, and manage multiple sprints. Switch between active sprints and see each sprint’s tasks.
-✅ TODO & Task Management:
-Add, edit, mark complete, and delete tasks.
-Assign priority tags (High, Medium, Low) to each task.
-Assign tasks to specific team members.
-👥 Team Panel:
-Add, edit, or remove team members.
-Assign roles and see all team members in a sidebar panel.
-📊 Status/Stats Panel:
-See at-a-glance task breakdown (in progress, completed, left) for the current sprint.
-🖥️ Retro Terminal UI:
-Classic dark console-style with green text.
-Monospace font and minimalist, readable layout.
+# Sprint Planner
 
-Project Structure
-/public
+A web-based sprint planner and task board built with **React** and **TypeScript** for small agile-style teams.
+
+## Features
+
+- **Sprint tracking:** Create, rename, and delete sprints; switch the active sprint and view its tasks.
+- **Tasks:** Add, complete, and delete tasks with **High / Medium / Low** priority and optional assignee.
+- **Team panel:** Add, edit, and remove team members (name + role label for display).
+- **Stats:** Counts for in progress, completed, and total tasks in the current sprint.
+- **UI:** Retro terminal look — dark background, monospace type, green accent styling.
+
+## Project structure
+
+```text
+public/
   └── index.html
-/src
+src/
   ├── App.tsx
   ├── index.tsx
   ├── env.ts
   ├── styles.css
   ├── types.ts
-  └── /components
+  └── components/
       ├── AddTodoForm.tsx
       ├── TodoItem.tsx
       ├── TeamPanel.tsx
@@ -34,28 +30,66 @@ Project Structure
 tsconfig.json
 package.json
 README.md
+AGENTS.md
+.gitignore
+```
 
-Getting Started
-Clone this repository:
-git clone [your-repo-url]
-cd [your-project-folder]
+## Getting started
 
-Set ExcecutionPolicy for current session: 
+Clone the repository:
+
+```bash
+git clone https://github.com/KekoFigueroa-dev/matrix-themed-sprint-planner.git
+cd matrix-themed-sprint-planner
+```
+
+On Windows PowerShell, if scripts are blocked for the session:
+
+```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-​
-Install dependencies:
+```
+
+Install and run:
+
+```bash
 npm install
-
-​
-Run the app locally:
 npm start
+```
 
-​
-The app will open at http://localhost:3000.
-Tech Stack
-React 18
-TypeScript
-react-scripts (Create React App)
-Framer Motion (for animations)
-Supabase (optional, for backend)
-CSS (retro terminal theme)
+The dev server runs at [http://localhost:3000](http://localhost:3000).
+
+Production build (used by Vercel and static hosting):
+
+```bash
+npm run build
+```
+
+Output is written to `build/`.
+
+## Tech stack
+
+- React 18  
+- TypeScript  
+- Create React App (`react-scripts`)  
+- Framer Motion  
+- Lucide React  
+- `@supabase/supabase-js` (planned for auth and data; not fully integrated yet)  
+- Global CSS (`src/styles.css`)
+
+## Roadmap and implementation plan
+
+**Vision (V2):** Portfolio-grade polish (clear hierarchy and spacing, restrained motion) plus subtle terminal / cyberpunk accents — backed by **Supabase Auth**, **shared workspaces**, **RLS-based permissions**, and **Vercel** deployment. No custom backend server.
+
+**Agent and step-by-step plan:** See **[AGENTS.md](./AGENTS.md)** for phased PR order, RLS expectations, and constraints for coding agents.
+
+### Goals for the first push
+
+1. Land **documentation** so contributors and agents share the same plan (`README.md` + `AGENTS.md`).
+2. Keep the first push **small**: docs (and optional README/scripty hygiene only — no large refactors unless agreed).
+3. Align on **implementation order** after docs: UI foundation → auth → workspace bootstrap → schema/RLS/CRUD → invites → deploy and README polish.
+
+Optional follow-ups (not committed as V2 scope) are listed at the bottom of `AGENTS.md`.
+
+## License / contributing
+
+Add a `LICENSE` and contribution notes when you are ready for external contributors.
