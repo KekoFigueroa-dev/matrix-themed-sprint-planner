@@ -31,10 +31,12 @@ This lets anyone (including you later) **resume from the last documented state**
 
 ## Implementation rhythm (agent + maintainer)
 
+- **New branch per new work item:** whenever you start a new point or slice (docs or code), **create a dedicated branch from `main` first** (for example `feat/phase-1-schema`, `docs/readme-env`, `chore/remove-node-modules-from-git`). Open a PR from that branch; merge to `main` after review. Do not stack unrelated changes on an old feature branch.
 - **One focused deliverable per step** (one PR-sized slice): code or docs, not a bundle of unrelated features.
 - The agent **implements** the slice, **updates relevant docs** (e.g. `docs/v2.md` progress table, `docs/rls.md` if policies change, README env/architecture when wiring changes), and **writes a clear test plan** (manual steps or commands) in the PR description or in `docs/v2.md` under the phase notes.
 - **Testing is deferred to the maintainer:** the agent does not substitute for you running Supabase checks, browser flows, or Vercel smoke tests unless you explicitly ask.
 - **You choose the next slice:** say which phase or file area to tackle next; the agent should not assume priority beyond what you stated.
+- **After merge: cleanup and consolidate (when you ask):** once a PR is **merged to `main`** (and you have pushed if needed), you will often ask for a **cleanup / consolidation** pass. That means housekeeping only: align docs (`docs/v2.md`, `README.md`, `docs/rls.md`) with what shipped, dedupe or tighten prose, delete stale local branches, optional small clarity refactors — **not** new product scope unless you say so. Do that work on a **fresh branch** from updated `main` (for example `chore/post-merge-consolidation` or a name you pick), then PR again.
 
 ## Working agreements
 
