@@ -4,6 +4,8 @@ This document explains **why** the database enforces access the way it does. **R
 
 Companion: [V2 spec](./v2.md) (entities, flows, phases).
 
+**Executable policies:** [../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql](../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql) — treat as source of truth; this doc explains intent. When policies change, update both the migration (new file) and this narrative.
+
 ---
 
 ## Principles
@@ -30,7 +32,7 @@ Implementations live in SQL migrations; names may be prefixed (e.g. `public.is_w
 ### `workspace_members`
 
 - **SELECT:** any member of the workspace may read rows for **that** workspace (needed for role UI and collaboration).
-- **INSERT / UPDATE / DELETE:** **admins** only, **except** what the **invite acceptance RPC** performs internally (security definer).
+- **INSERT / UPDATE / DELETE:** **admins** only, **except** (a) **owner bootstrap:** owner may insert their own `workspace_members` row as `admin` for a workspace they own (see migration), and (b) future **invite acceptance RPC** (security definer, Phase 3).
 
 ### `invites`
 
