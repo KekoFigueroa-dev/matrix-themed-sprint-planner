@@ -152,7 +152,7 @@ Browser (CRA + React Router) ──► Supabase Auth (JWT)
 
 **Live demo:** add your production URL here after deploy (e.g. `https://matrix-themed-sprint-planner.vercel.app`).
 
-This repo includes [`vercel.json`](./vercel.json) (CRA build + SPA rewrites for React Router).
+[`vercel.json`](./vercel.json) runs a fresh `npm ci` and builds CRA via `node` (fixes Vercel **exit 126**). SPA rewrites support React Router.
 
 ### 1. Import project (Vercel dashboard)
 
@@ -163,7 +163,7 @@ This repo includes [`vercel.json`](./vercel.json) (CRA build + SPA rewrites for 
 | Name | Value |
 |------|--------|
 | `REACT_APP_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
-| `REACT_APP_SUPABASE_ANON_KEY` | Same → `anon` public key, **or** `REACT_APP_SUPABASE_PUBLISHABLE_KEY` |
+| `REACT_APP_SUPABASE_PUBLISHABLE_KEY` | Same → **publishable** key (`sb_publishable_…`), **or** `REACT_APP_SUPABASE_ANON_KEY` with the **anon** key |
 
 4. **Deploy**. Copy the `*.vercel.app` URL.
 
