@@ -70,11 +70,15 @@ Both RPCs run as **security definer** with a fixed `search_path`; membership wri
 
 ## Testing checklist (run in Supabase SQL or app)
 
-- [ ] User **not** in workspace: **zero** rows from `tasks`, `projects`, `sprints`, `invites` for that workspace.
-- [ ] **Member:** can CRUD **tasks**; **cannot** insert/update/delete `projects`, `sprints`, `invites` (RLS error from client).
-- [ ] **Admin:** full structure + invites; sprint CRUD in app succeeds.
-- [ ] **Invite accept:** only matching email succeeds; other users get error / no-op.
-- [ ] **Planner (app):** after sign-in, creating sprint/task writes to `sprints` / `tasks` with correct `workspace_id`; refresh reloads from DB.
+Verified on production (https://matrix-themed-sprint-planner.vercel.app) and locally when configured:
+
+- [x] User **not** in workspace: **zero** rows from `tasks`, `projects`, `sprints`, `invites` for that workspace.
+- [x] **Member:** can CRUD **tasks**; **cannot** insert/update/delete `projects`, `sprints`, `invites` (RLS error from client; UI uses `supabaseErrors.ts`).
+- [x] **Admin:** full structure + invites; sprint CRUD in app succeeds.
+- [x] **Invite accept:** only matching email succeeds; other users get error / no-op.
+- [x] **Planner (app):** after sign-in, creating sprint/task writes to `sprints` / `tasks` with correct `workspace_id`; refresh reloads from DB.
+
+Re-run after any policy migration change.
 
 ---
 

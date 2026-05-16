@@ -16,7 +16,8 @@ This file tells **humans and coding agents** how to work in this repo: **non-neg
 2. **No custom backend application server** in V2. Use **Supabase Auth + Postgres + RLS** (and **RPC / security definer** where needed). Do not add Express/Fastify/etc. as an app server.
 3. **Design is a deliverable:** stripe.dev-level polish + restrained retro cyberpunk/vaporwave — tokens, spacing, typography, accessible contrast, strong empty/loading/error states.
 4. **Security is a deliverable:** **RLS enforces permissions.** UI hiding buttons is not sufficient.
-5. **V2 stack assumption:** **Next.js + TypeScript** per [docs/v2.md](./docs/v2.md). The repo may still be on **CRA** until migration — if you migrate, do it as an explicit PR and then update the “Current repository state” section in `docs/v2.md`.
+5. **Stack:** **V2 shipped on CRA + TypeScript** (`react-scripts`, React Router). **Next.js** is an optional post-V2 migration — do not assume App Router paths unless that PR has merged. Update `docs/v2.md` if you migrate.
+6. **Deploy before merge:** New work should pass a **Vercel Preview** smoke test (auth, planner, `/login`, `/invites`) with **Production + Preview** env vars set on Vercel before merging to `main`.
 
 ---
 
@@ -43,7 +44,7 @@ This lets anyone (including you later) **resume from the last documented state**
 - Prefer **small commits** and **PR-sized** diffs.
 - Ship **SQL migrations** in-repo with PRs that touch schema; explain policy **intent** (comments or PR description). Link or duplicate rationale in [docs/rls.md](./docs/rls.md) when behavior changes.
 - Do not expand scope into a Jira-like product; out-of-scope list is in [docs/v2.md](./docs/v2.md#out-of-scope-guardrails--do-not-creep).
-- **Repository hygiene:** `node_modules` must not be committed going forward — see [README](./README.md). If history still tracks `node_modules`, use a dedicated PR to remove it from the index.
+- **Repository hygiene:** `node_modules` must not be committed — see [README](./README.md). `main` already untracks `node_modules`; use `npm ci` locally and `vercel.json` install on deploy.
 
 ---
 
@@ -53,8 +54,9 @@ This lets anyone (including you later) **resume from the last documented state**
 |------------|----------|
 | Routes / auth gate | `src/App.tsx` — session via `onAuthStateChange` + `getSession` |
 | Supabase client | `src/lib/supabaseClient.ts` |
-| Workspace + planner data | `src/lib/workspace.ts`, `src/lib/plannerDb.ts` |
+| Workspace + planner data | `src/lib/workspace.ts`, `src/lib/plannerDb.ts`, `src/lib/supabaseErrors.ts` |
 | Planner UI | `src/pages/PlannerPage.tsx` — sprints/tasks from DB; team in `localStorage` |
+| Deploy | `vercel.json` — `npm ci` + node `react-scripts` build + SPA rewrites |
 | Auth pages | `src/pages/LoginPage.tsx`, `RegisterPage.tsx` |
 | Invites | `src/pages/InvitesPage.tsx` |
 | Types | `src/types.ts` — `Sprint`/`Todo` use string UUID ids |
@@ -99,13 +101,12 @@ V2 REQUIREMENTS (see docs/v2.md for detail):
 - Members CRUD tasks; admins manage projects/sprints/invites
 - Deploy to Vercel
 
-WORK PLAN (update progress table in docs/v2.md when done):
-Phase 0–1: Done (schema + RLS)
-Phase 2–3: Done (auth, workspace, invites)
-Planner slice: Done (sprints/tasks in Supabase; team panel still localStorage)
-Phase 4: Done (role-based UI, member sprint gating)
-Phase 5: In progress — Vercel (`vercel.json` + README); add live URL after first deploy
-Optional later: Next.js migration; wire projects table; remove node_modules from git history
+WORK PLAN (V2 complete — see docs/v2.md progress table):
+Phases 0–5: Done. Live: https://matrix-themed-sprint-planner.vercel.app
+Shipped: CRA + Supabase (auth, RLS, sprints/tasks, invites, role UI), Vercel deploy, node_modules untracked
+Still local-only: team panel (localStorage); projects table unused in UI
+Post-V2 optional: Next.js migration; team/projects in DB; realtime; invite email
+Before merging new PRs: Vercel Preview smoke test + correct REACT_APP_* on Production AND Preview
 
 OUTPUT:
 - List exact files to create/modify and why.

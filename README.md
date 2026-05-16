@@ -1,6 +1,8 @@
 # Sprint Planner
 
-Web-based sprint planning and tasks for small teams. **V2** targets portfolio-grade polish, **Supabase Auth + Postgres + RLS**, multi-user workspaces, and **Vercel** deployment.
+Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Create React App** + **Supabase Auth / Postgres / RLS** + **Vercel**.
+
+**Live demo:** https://matrix-themed-sprint-planner.vercel.app
 
 ## Documentation map (start here)
 
@@ -23,10 +25,10 @@ Web-based sprint planning and tasks for small teams. **V2** targets portfolio-gr
 | **Workspace** | Auto-created on first sign-in; rows in `workspaces` + `workspace_members` |
 | **Invites** | `/invites` — admin invite/revoke; invitee signs in with **invited email** and **Accept** (no invite email sent by the app) |
 | **Planner** | **Sprints + tasks** → Supabase (`sprints`, `tasks`, workspace-scoped). **Team panel** → `localStorage` only |
-| **Permissions** | Role badge; members manage tasks only; admins manage sprints (Phase 4) |
-| **Deploy** | `vercel.json` ready; see [Deployment (Vercel)](#deployment-vercel) |
-| **Not in UI yet** | `projects` table; `doing` task status |
-| **V2 framework target** | Next.js App Router — see [docs/v2.md](./docs/v2.md) |
+| **Permissions** | Role badge; members manage tasks only; admins manage sprints; RLS errors surfaced via `src/lib/supabaseErrors.ts` |
+| **Deploy** | **Live** on Vercel — [Deployment (Vercel)](#deployment-vercel) |
+| **Not in UI yet** | `projects` table; `doing` column in DB (UI uses todo/done toggle) |
+| **Post-V2 optional** | Next.js migration; team panel in Postgres — [docs/v2.md § Optional follow-ups](./docs/v2.md#optional-follow-ups-not-v2) |
 
 ---
 
@@ -59,7 +61,7 @@ On Windows PowerShell, if execution policy blocks scripts:
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
-**Repository hygiene:** Do not commit `node_modules`. If `git status` shows noise under `node_modules/`, run `git restore node_modules` before committing.
+**Repository hygiene:** `node_modules/` is **gitignored** and must not be committed (historical commits were removed on `main`). Use `npm ci` after clone. If `git status` shows noise under `node_modules/`, run `git restore node_modules` before committing.
 
 ---
 
@@ -92,7 +94,9 @@ Run each file once in **SQL Editor** (or `supabase db push` if CLI is linked):
 **Dashboard checklist**
 
 1. Create project → **Authentication → Providers:** enable **Email**.
-2. **Authentication → URL configuration:** Site URL `http://localhost:3000`; redirect `http://localhost:3000/**` (add production URL when deploying).
+2. **Authentication → URL configuration:**
+   - **Production:** Site URL `https://matrix-themed-sprint-planner.vercel.app`; redirect `https://matrix-themed-sprint-planner.vercel.app/**`
+   - **Local dev (optional):** `http://localhost:3000` and `http://localhost:3000/**`
 3. Run migrations above.
 4. Confirm **RLS enabled** on all tables.
 
@@ -100,12 +104,17 @@ Maintainer test plans: [docs/v2.md](./docs/v2.md) (Phases 1–3, Planner slice).
 
 ---
 
-## Quick smoke test (local)
+## Quick smoke test
+
+**Production:** https://matrix-themed-sprint-planner.vercel.app
 
 1. Register or sign in → planner loads.
 2. Hard refresh → still signed in, still on planner.
 3. Create sprint + task → rows appear in Supabase **`sprints`** / **`tasks`**.
-4. Optional: `/invites` flow with two accounts.
+4. Open `/login` and `/invites` directly (no 404).
+5. Optional: `/invites` flow with two accounts (no invite email — invitee must register with the invited email).
+
+**Local:** same steps at http://localhost:3000 after `.env.local` + migrations (add localhost URLs in Supabase if you develop locally).
 
 ---
 
@@ -120,8 +129,9 @@ src/
   ├── App.tsx            # Auth gate + routes
   ├── lib/
   │   ├── supabaseClient.ts
-  │   ├── workspace.ts   # Active workspace_id for current user
-  │   └── plannerDb.ts   # Sprints/tasks CRUD
+  │   ├── workspace.ts   # Active workspace + role (prefers invited workspace)
+  │   ├── plannerDb.ts   # Sprints/tasks CRUD
+  │   └── supabaseErrors.ts  # User-friendly RLS messages
   ├── pages/
   │   ├── PlannerPage.tsx
   │   ├── LoginPage.tsx
@@ -129,6 +139,7 @@ src/
   │   ├── InvitesPage.tsx
   │   └── ConfigMissingPage.tsx
   └── components/        # SprintManager, TodoItem, TeamPanel, …
+vercel.json              # Vercel: npm ci + CRA build + SPA rewrites
 AGENTS.md
 README.md
 .env.example
@@ -173,16 +184,27 @@ Supabase → **Authentication** → **URL configuration**:
 
 | Field | Value |
 |-------|--------|
-| **Site URL** | `https://YOUR_VERCEL_DOMAIN` |
-| **Redirect URLs** | `https://YOUR_VERCEL_DOMAIN/**` |
+| **Site URL** | `https://matrix-themed-sprint-planner.vercel.app` |
+| **Redirect URLs** | `https://matrix-themed-sprint-planner.vercel.app/**` |
 
-Keep `http://localhost:3000` and `http://localhost:3000/**` for local dev.
+Add `http://localhost:3000/**` only if you still run `npm start` locally.
+
+**Env vars on Vercel:** set for **Production and Preview**. Copy URL and API key from Supabase **Project Settings → API** (paste exactly — typos cause CORS/401). After any env change: **Redeploy** (uncheck build cache if login still fails).
 
 ### 3. Production smoke test
 
 Sign up → planner → create sprint/task → hard refresh on `/invites` and `/login` (SPA routes). Optional: admin invites member (register with invited email → `/invites` → Accept).
 
 Full checklist: [docs/v2.md § Phase 5 — Maintainer test plan](./docs/v2.md#phase-5--maintainer-test-plan).
+
+### Troubleshooting deploy auth
+
+| Symptom | Likely cause |
+|---------|----------------|
+| CORS / NetworkError, status `(null)` | Wrong `REACT_APP_SUPABASE_URL` in Vercel env (hostname typo) |
+| `Invalid API key` (401) | Wrong or truncated publishable/anon key; or **Preview** env not updated |
+| Old URL/key after fix | Browser cache — hard refresh or private window; confirm new `main.*.js` in Network |
+| Works on prod URL, not `*-xxx.vercel.app` | Preview deployment needs same env vars (**Preview** scope) |
 
 ---
 
@@ -198,7 +220,14 @@ Full checklist: [docs/v2.md § Phase 5 — Maintainer test plan](./docs/v2.md#ph
 
 ## Git workflow (branches)
 
-Use **`main`** as the integration branch. Start each slice from updated `main` (e.g. `feat/phase-4-permissions-ui`). Delete feature branches after merge. See [AGENTS.md](./AGENTS.md).
+Use **`main`** as the integration branch. For new work:
+
+1. `git checkout main && git pull`
+2. Branch (e.g. `feat/my-feature`)
+3. Push → verify **Vercel Preview** deploy (same Supabase env vars on **Preview**)
+4. Smoke-test preview URL → open PR → merge to `main` → production redeploys
+
+Delete merged feature branches locally and on GitHub when done. See [AGENTS.md](./AGENTS.md).
 
 ---
 
