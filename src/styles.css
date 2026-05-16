@@ -546,3 +546,149 @@ h2 {
   padding: 40px 0;
   font-size: 1.1rem;
 }
+
+/* --- Auth + session --- */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #008000;
+  padding: 28px;
+  background-color: rgba(0, 255, 0, 0.04);
+}
+
+.auth-title {
+  margin: 0 0 20px 0;
+  font-size: 1.5rem;
+  font-weight: normal;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.auth-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  color: #008000;
+}
+
+.auth-input {
+  background: #0a0a0a;
+  border: 1px solid #008000;
+  color: #00FF00;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #00FF00;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid #00FF00;
+  color: #00FF00;
+  font-family: inherit;
+  font-size: 1rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.auth-submit:hover:not(:disabled) {
+  background-color: #00FF00;
+  color: #000;
+}
+
+.auth-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-error {
+  color: #d9534f;
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+}
+
+.auth-info {
+  color: #008000;
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.auth-footer {
+  margin: 20px 0 0 0;
+  text-align: center;
+  color: #008000;
+  font-size: 0.95rem;
+}
+
+.auth-footer a {
+  color: #00FF00;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.auth-code {
+  color: #00FF00;
+  background: rgba(0, 255, 0, 0.08);
+  padding: 0 6px;
+}
+
+.auth-pre {
+  text-align: left;
+  overflow-x: auto;
+  background: #0a0a0a;
+  border: 1px dashed #008000;
+  padding: 12px;
+  font-size: 0.85rem;
+  color: #00FF00;
+}
+
+.session-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.session-email {
+  font-size: 0.85rem;
+  color: #008000;
+}
+
+.sign-out-button {
+  background: transparent;
+  border: 1px solid #008000;
+  color: #008000;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.sign-out-button:hover {
+  color: #00FF00;
+  border-color: #00FF00;
+}

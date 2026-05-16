@@ -58,10 +58,10 @@ Policies should evaluate so **no rows** are visible for workspaces the user does
 
 | Function | Purpose |
 |----------|---------|
-| `ensure_workspace_for_user()` | If no workspace/membership for `auth.uid()`, create workspace + `workspace_members` admin row; return `workspace_id`; **idempotent** on repeated calls. |
+| `ensure_workspace_for_user()` | Idempotent: owned workspace + admin membership for `auth.uid()`; client calls after sign-in (Phase 2). Implemented in SQL migration; runs as **security definer**. |
 | `accept_workspace_invite(invite_id uuid)` | Verify invite email matches authenticated user email; insert `workspace_members`; delete or update invite; return workspace id. |
 
-Both run as **security definer**, validate `auth.uid()` and email inside, and avoid opening global write on membership.
+`ensure_workspace_for_user` runs as **security definer** (see migration). **`accept_workspace_invite`** will follow the same pattern in Phase 3.
 
 ---
 
