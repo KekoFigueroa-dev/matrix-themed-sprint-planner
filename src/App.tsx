@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import ConfigMissingPage from './pages/ConfigMissingPage';
 import LoginPage from './pages/LoginPage';
 import PlannerPage from './pages/PlannerPage';
+import InvitesPage from './pages/InvitesPage';
 import RegisterPage from './pages/RegisterPage';
 import { getSupabase, isSupabaseConfigured } from './lib/supabaseClient';
 
@@ -61,6 +62,7 @@ const SessionRoutes: React.FC = () => {
         <Routes>
             <Route path="/login" element={session ? <Navigate to="/" replace /> : <LoginPage />} />
             <Route path="/register" element={session ? <Navigate to="/" replace /> : <RegisterPage />} />
+            <Route path="/invites" element={session ? <InvitesPage /> : <Navigate to="/login" replace />} />
             <Route path="/" element={session ? <PlannerPage /> : <Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

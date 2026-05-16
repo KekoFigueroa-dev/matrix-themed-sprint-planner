@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import TeamPanel from '../components/TeamPanel';
 import SprintManager from '../components/SprintManager';
 import StatsPanel from '../components/StatsPanel';
+import { Link } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
 
 const PlannerPage: React.FC = () => {
@@ -157,6 +158,9 @@ const PlannerPage: React.FC = () => {
                         <span className="session-email">
                             {session?.user?.email ?? ''}
                         </span>
+                        <Link to="/invites" className="nav-link-invites">
+                            Invites
+                        </Link>
                         <button type="button" className="sign-out-button" onClick={handleSignOut}>
                             Sign out
                         </button>

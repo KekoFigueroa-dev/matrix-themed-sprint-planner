@@ -32,7 +32,7 @@ Implementations live in SQL migrations; names may be prefixed (e.g. `public.is_w
 ### `workspace_members`
 
 - **SELECT:** any member of the workspace may read rows for **that** workspace (needed for role UI and collaboration).
-- **INSERT / UPDATE / DELETE:** **admins** only, **except** (a) **owner bootstrap:** owner may insert their own `workspace_members` row as `admin` for a workspace they own (see migration), and (b) future **invite acceptance RPC** (security definer, Phase 3).
+- **INSERT / UPDATE / DELETE:** **admins** only, **except** (a) **owner bootstrap:** owner may insert their own `workspace_members` row as `admin` for a workspace they own (see migration), and (b) **`accept_workspace_invite`** RPC (security definer — Phase 3 migration).
 
 ### `invites`
 
@@ -59,9 +59,9 @@ Policies should evaluate so **no rows** are visible for workspaces the user does
 | Function | Purpose |
 |----------|---------|
 | `ensure_workspace_for_user()` | Idempotent: owned workspace + admin membership for `auth.uid()`; client calls after sign-in (Phase 2). Implemented in SQL migration; runs as **security definer**. |
-| `accept_workspace_invite(invite_id uuid)` | Verify invite email matches authenticated user email; insert `workspace_members`; delete or update invite; return workspace id. |
+| `accept_workspace_invite(p_invite_id uuid)` | **Shipped (Phase 3):** verifies `auth.users.email` matches invite row; upserts `workspace_members`; deletes invite; returns workspace id. Client: `.rpc('accept_workspace_invite', { p_invite_id })`. |
 
-`ensure_workspace_for_user` runs as **security definer** (see migration). **`accept_workspace_invite`** will follow the same pattern in Phase 3.
+Both RPCs run as **security definer** with a fixed `search_path`; membership writes stay centralized and auditable.
 
 ---
 
