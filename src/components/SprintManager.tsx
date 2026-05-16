@@ -5,11 +5,11 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 interface SprintManagerProps {
   sprints: Sprint[];
-  currentSprintId: number | null;
-  onSprintChange: (id: number) => void;
+  currentSprintId: string | null;
+  onSprintChange: (id: string) => void;
   onAddSprint: (name: string) => void;
-  onRenameSprint: (id: number, newName: string) => void;
-  onDeleteSprint: (id: number) => void;
+  onRenameSprint: (id: string, newName: string) => void;
+  onDeleteSprint: (id: string) => void;
 }
 
 const SprintManager: React.FC<SprintManagerProps> = ({
@@ -73,7 +73,7 @@ const SprintManager: React.FC<SprintManagerProps> = ({
       <div className="sprint-manager-row">
         <select
           value={currentSprintId ?? ''}
-          onChange={(e) => onSprintChange(Number(e.target.value))}
+          onChange={(e) => onSprintChange(e.target.value)}
           className="sprint-select"
           disabled={sprints.length === 0}
         >

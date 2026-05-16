@@ -2,16 +2,16 @@
 export type Priority = 'High' | 'Medium' | 'Low';
 
 export interface Sprint {
-  id: number;
+  id: string;
   name: string;
 }
 
 export interface Todo {
-  id: number;
+  id: string;
   text: string;
   completed: boolean;
   priority: Priority;
-  sprintId: number;
+  sprintId: string;
   assigneeId?: number;
 }
 
