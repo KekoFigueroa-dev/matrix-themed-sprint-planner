@@ -16,9 +16,27 @@ Web-based sprint planning and tasks for small teams. **V2** targets portfolio-gr
 
 ## Current app (main branch)
 
-- **Stack:** React 18, TypeScript, **Create React App** (`react-scripts`), Framer Motion, Lucide, `@supabase/supabase-js` (not wired).
-- **Persistence:** Browser `localStorage` for sprints, todos, and team members.
+- **Stack:** React 18, TypeScript, **Create React App** (`react-scripts`), Framer Motion, Lucide, **React Router**, `@supabase/supabase-js`.
+- **Auth:** Email/password via Supabase (`/login`, `/register`); planner requires session; **`ensure_workspace_for_user`** RPC after login (Phase 2 — apply SQL migration + `.env.local`).
+- **Invites:** **`/invites`** page; run migration **`20250516180000_accept_workspace_invite.sql`** for **`accept_workspace_invite`** RPC (Phase 3).
+- **Planner data:** Still **localStorage** (Supabase-backed tasks/sprints come in a later slice).
 - **V2 target stack:** **Next.js** + Supabase — see [docs/v2.md](./docs/v2.md#current-repository-state-vs-v2-read-this-first).
+
+### Phase 2 — Try auth + workspace locally
+
+1. Supabase → **SQL Editor** → run `supabase/migrations/20250515120000_ensure_workspace_for_user.sql`.
+2. Supabase → **Authentication** → enable **Email**; **URL Configuration** → Site URL `http://localhost:3000`, redirect `http://localhost:3000/**`. Turn off email confirmation for quick tests if you prefer.
+3. Copy [`.env.example`](./.env.example) to **`.env.local`** with `REACT_APP_SUPABASE_URL` and either `REACT_APP_SUPABASE_ANON_KEY` or `REACT_APP_SUPABASE_PUBLISHABLE_KEY`.
+4. `npm install` → `npm start` → register or sign in → confirm rows in **`workspaces`** and **`workspace_members`** for your user.
+
+Full checklist: [docs/v2.md § Phase 2 — Maintainer test plan](./docs/v2.md#phase-2--maintainer-test-plan).
+
+### Phase 3 — Invites + accept
+
+1. Supabase → **SQL Editor** → run `supabase/migrations/20250516180000_accept_workspace_invite.sql`.
+2. Two browser profiles or incognito: admin invites collaborator email; collaborator accepts at **`/invites`**.
+
+Detail: [docs/v2.md § Phase 3 — Maintainer test plan](./docs/v2.md#phase-3--maintainer-test-plan).
 
 ---
 
@@ -36,13 +54,23 @@ docs/
   └── rls.md         # RLS model (+ link to migration SQL)
 supabase/
   └── migrations/
-      └── 20250514130000_initial_schema_workspaces_rls.sql
+      ├── 20250514130000_initial_schema_workspaces_rls.sql
+      ├── 20250515120000_ensure_workspace_for_user.sql
+      └── 20250516180000_accept_workspace_invite.sql
 public/
   └── index.html
 src/
   ├── App.tsx
-  ├── index.tsx
   ├── env.ts
+  ├── index.tsx
+  ├── lib/
+  │   └── supabaseClient.ts
+  ├── pages/
+  │   ├── ConfigMissingPage.tsx
+  │   ├── InvitesPage.tsx
+  │   ├── LoginPage.tsx
+  │   ├── PlannerPage.tsx
+  │   └── RegisterPage.tsx
   ├── styles.css
   ├── types.ts
   └── components/
@@ -53,6 +81,7 @@ src/
       └── SprintManager.tsx
 AGENTS.md
 README.md
+.env.example
 package.json
 tsconfig.json
 ```
