@@ -21,7 +21,7 @@ Web-based sprint planning and tasks for small teams. **V2** targets portfolio-gr
 | **Stack** | React 18, TypeScript, **CRA** (`react-scripts`), Framer Motion, Lucide, **React Router**, `@supabase/supabase-js` |
 | **Auth** | `/login`, `/register`; protected `/`; session persists on refresh; **`ensure_workspace_for_user`** RPC |
 | **Workspace** | Auto-created on first sign-in; rows in `workspaces` + `workspace_members` |
-| **Invites** | `/invites` — admin invite/revoke; invitee **Accept** via `accept_workspace_invite` RPC |
+| **Invites** | `/invites` — admin invite/revoke; invitee signs in with **invited email** and **Accept** (no invite email sent by the app) |
 | **Planner** | **Sprints + tasks** → Supabase (`sprints`, `tasks`, workspace-scoped). **Team panel** → `localStorage` only |
 | **Not in UI yet** | `projects` table; `doing` task status; role-based UI hiding (Phase 4); Vercel deploy (Phase 5) |
 | **V2 framework target** | Next.js App Router — see [docs/v2.md](./docs/v2.md) |
