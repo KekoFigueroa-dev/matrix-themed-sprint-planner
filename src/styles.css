@@ -861,3 +861,33 @@ h2 {
 .subtle-hint {
   opacity: 0.85;
 }
+
+.bootstrap-error-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 24px;
+  background: rgba(217, 83, 79, 0.15);
+  border-bottom: 2px solid #d9534f;
+  color: #ffb4b0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.bootstrap-error-retry {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid #d9534f;
+  color: #ffb4b0;
+  padding: 8px 14px;
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.bootstrap-error-retry:hover {
+  background: rgba(217, 83, 79, 0.25);
+}
