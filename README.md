@@ -147,9 +147,26 @@ Browser (CRA + React Router) ──► Supabase Auth (JWT)
 
 ---
 
-## Deployment (Vercel) — Phase 5
+## Deployment (Vercel)
 
-Not live yet. When ready: connect repo, set `REACT_APP_SUPABASE_*` (or `NEXT_PUBLIC_*` after Next migration), match Supabase redirect URLs to the Vercel domain. See [docs/v2.md § Phase 5](./docs/v2.md#phase-5--deployment--credibility-05-10-h).
+**Live demo:** _(add your URL after deploy)_
+
+[`vercel.json`](./vercel.json) fixes CRA on Vercel (fresh `npm ci` + build via `node`; avoids exit 126 from tracked `node_modules`).
+
+### Vercel — environment variables (exact names)
+
+Add both in **Project → Settings → Environment Variables** → scope **Production and Preview**:
+
+| Key | Value |
+|-----|--------|
+| `REACT_APP_SUPABASE_URL` | Supabase → Project Settings → **API** → **Project URL** |
+| `REACT_APP_SUPABASE_PUBLISHABLE_KEY` | Same page → **publishable** key (`sb_publishable_…`) **or** use `REACT_APP_SUPABASE_ANON_KEY` with the **anon** key |
+
+Same values as your local [`.env.local`](./.env.example). **No invite email is sent** — invitees register with the invited email and open `/invites`.
+
+### Supabase after deploy
+
+**Authentication → URL configuration:** Site URL = your Vercel URL; Redirect URLs = `https://YOUR-APP.vercel.app/**` (keep `http://localhost:3000/**` for dev).
 
 ---
 
