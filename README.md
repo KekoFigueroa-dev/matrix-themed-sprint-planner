@@ -38,6 +38,12 @@ Full checklist: [docs/v2.md § Phase 2 — Maintainer test plan](./docs/v2.md#ph
 
 Detail: [docs/v2.md § Phase 3 — Maintainer test plan](./docs/v2.md#phase-3--maintainer-test-plan).
 
+### Planner → Supabase (sprints + tasks)
+
+1. Run `supabase/migrations/20250517120000_tasks_planner_fields.sql` in **SQL Editor** (adds `priority`, `assignee_member_id` on `tasks`).
+2. Sign in → create sprint/task → confirm rows in **`sprints`** and **`tasks`** for your workspace.
+3. Hard refresh → data reloads from Supabase (same browser + origin). Team panel stays in **localStorage**.
+
 ---
 
 ## Features (today)
@@ -56,7 +62,8 @@ supabase/
   └── migrations/
       ├── 20250514130000_initial_schema_workspaces_rls.sql
       ├── 20250515120000_ensure_workspace_for_user.sql
-      └── 20250516180000_accept_workspace_invite.sql
+      ├── 20250516180000_accept_workspace_invite.sql
+      └── 20250517120000_tasks_planner_fields.sql
 public/
   └── index.html
 src/

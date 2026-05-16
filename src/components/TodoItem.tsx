@@ -6,8 +6,8 @@ import { motion } from 'framer-motion';
 
 interface TodoItemProps {
   todo: Todo;
-  toggleTodo: (id: number) => void;
-  deleteTodo: (id: number) => void;
+  toggleTodo: (id: string) => void;
+  deleteTodo: (id: string) => void;
   teamMembers: TeamMember[];
 }
 

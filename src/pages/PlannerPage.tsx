@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { Todo, Priority, TeamMember, Sprint } from '../types';
 import TodoItem from '../components/TodoItem';
@@ -9,14 +9,34 @@ import SprintManager from '../components/SprintManager';
 import StatsPanel from '../components/StatsPanel';
 import { Link } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
+import { fetchActiveWorkspaceId } from '../lib/workspace';
+import {
+    clearAssigneeFromTasks,
+    createSprint,
+    createTask,
+    deleteSprintAndTasks,
+    deleteTask,
+    fetchSprints,
+    fetchTasks,
+    updateSprintName,
+    updateTaskStatus,
+} from '../lib/plannerDb';
+
+function currentSprintStorageKey(workspaceId: string): string {
+    return `planner:currentSprintId:${workspaceId}`;
+}
 
 const PlannerPage: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
+    const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+    const [plannerLoading, setPlannerLoading] = useState(true);
+    const [plannerError, setPlannerError] = useState<string | null>(null);
+
     const [sprints, setSprints] = useState<Sprint[]>([]);
     const [todos, setTodos] = useState<Todo[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-    const [currentSprintId, setCurrentSprintId] = useState<number | null>(null);
-    const [storageReady, setStorageReady] = useState(false);
+    const [currentSprintId, setCurrentSprintId] = useState<string | null>(null);
+    const [teamStorageReady, setTeamStorageReady] = useState(false);
 
     useEffect(() => {
         getSupabase()
@@ -25,107 +45,145 @@ const PlannerPage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const savedSprints = localStorage.getItem('sprints');
-        let savedTodos = localStorage.getItem('todos');
         const savedMembers = localStorage.getItem('teamMembers');
-
-        let allSprints: Sprint[] = savedSprints ? JSON.parse(savedSprints) : [];
-        let allTodos: Todo[] = savedTodos ? JSON.parse(savedTodos) : [];
-        const allMembers: TeamMember[] = savedMembers ? JSON.parse(savedMembers) : [];
-
-        if (allTodos.length > 0 && allSprints.length === 0) {
-            const initialSprint: Sprint = { id: Date.now(), name: 'Initial Sprint' };
-            allSprints = [initialSprint];
-            allTodos = allTodos.map(todo => ({
-                ...todo,
-                priority: todo.priority || 'Medium',
-                sprintId: initialSprint.id,
-            }));
-            localStorage.setItem('sprints', JSON.stringify(allSprints));
-            localStorage.setItem('todos', JSON.stringify(allTodos));
-        }
-
-        setSprints(allSprints);
-        setTodos(allTodos);
-        setTeamMembers(allMembers);
-
-        if (allSprints.length > 0) {
-            const savedCurrentSprintId = localStorage.getItem('currentSprintId');
-            setCurrentSprintId(savedCurrentSprintId ? JSON.parse(savedCurrentSprintId) : allSprints[0].id);
-        }
-
-        setStorageReady(true);
+        setTeamMembers(savedMembers ? JSON.parse(savedMembers) : []);
+        setTeamStorageReady(true);
     }, []);
 
     useEffect(() => {
-        if (!storageReady) return;
-        if (sprints.length > 0) {
-            localStorage.setItem('sprints', JSON.stringify(sprints));
-        } else {
-            localStorage.removeItem('sprints');
-        }
-    }, [sprints, storageReady]);
-
-    useEffect(() => {
-        if (!storageReady) return;
-        localStorage.setItem('todos', JSON.stringify(todos));
-    }, [todos, storageReady]);
-
-    useEffect(() => {
-        if (!storageReady) return;
+        if (!teamStorageReady) return;
         localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
-    }, [teamMembers, storageReady]);
+    }, [teamMembers, teamStorageReady]);
+
+    const loadPlanner = useCallback(async () => {
+        setPlannerLoading(true);
+        setPlannerError(null);
+        try {
+            const wsId = await fetchActiveWorkspaceId();
+            if (!wsId) {
+                setPlannerError('No workspace found. Sign out and sign in again to bootstrap your workspace.');
+                setWorkspaceId(null);
+                setSprints([]);
+                setTodos([]);
+                setCurrentSprintId(null);
+                return;
+            }
+            setWorkspaceId(wsId);
+
+            let loadedSprints = await fetchSprints(wsId);
+            if (loadedSprints.length === 0) {
+                const first = await createSprint(wsId, 'Sprint 1');
+                loadedSprints = [first];
+            }
+
+            const loadedTodos = await fetchTasks(wsId);
+            setSprints(loadedSprints);
+            setTodos(loadedTodos);
+
+            const savedId = localStorage.getItem(currentSprintStorageKey(wsId));
+            const validSaved =
+                savedId && loadedSprints.some((s) => s.id === savedId) ? savedId : null;
+            setCurrentSprintId(validSaved ?? loadedSprints[0]?.id ?? null);
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : 'Failed to load planner data.';
+            setPlannerError(msg);
+            console.error('loadPlanner:', e);
+        } finally {
+            setPlannerLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
-        if (!storageReady || !currentSprintId) return;
-        localStorage.setItem('currentSprintId', JSON.stringify(currentSprintId));
-    }, [currentSprintId, storageReady]);
+        void loadPlanner();
+    }, [loadPlanner]);
 
-    const addSprint = (name: string) => {
-        const newSprint = { id: Date.now(), name };
-        const newSprints = [...sprints, newSprint];
-        setSprints(newSprints);
-        setCurrentSprintId(newSprint.id);
+    useEffect(() => {
+        if (!workspaceId || !currentSprintId) return;
+        localStorage.setItem(currentSprintStorageKey(workspaceId), currentSprintId);
+    }, [workspaceId, currentSprintId]);
+
+    const reportMutationError = (label: string, e: unknown) => {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error(label, e);
+        alert(`${label}: ${msg}`);
     };
 
-    const renameSprint = (id: number, newName: string) => {
-        setSprints(sprints.map(s => s.id === id ? { ...s, name: newName } : s));
+    const addSprint = async (name: string) => {
+        if (!workspaceId) return;
+        try {
+            const created = await createSprint(workspaceId, name);
+            setSprints((prev) => [...prev, created]);
+            setCurrentSprintId(created.id);
+        } catch (e) {
+            reportMutationError('Could not create sprint', e);
+        }
     };
 
-    const deleteSprint = (id: number) => {
+    const renameSprint = async (id: string, newName: string) => {
+        try {
+            await updateSprintName(id, newName);
+            setSprints((prev) => prev.map((s) => (s.id === id ? { ...s, name: newName } : s)));
+        } catch (e) {
+            reportMutationError('Could not rename sprint', e);
+        }
+    };
+
+    const deleteSprint = async (id: string) => {
+        if (!workspaceId) return;
         if (sprints.length <= 1) {
-            alert("Cannot delete the last sprint.");
+            alert('Cannot delete the last sprint.');
             return;
         }
-        setTodos(todos.filter(t => t.sprintId !== id));
-        const remainingSprints = sprints.filter(s => s.id !== id);
-        setSprints(remainingSprints);
-        setCurrentSprintId(remainingSprints[0]?.id || null);
+        try {
+            await deleteSprintAndTasks(id, workspaceId);
+            const remaining = sprints.filter((s) => s.id !== id);
+            setSprints(remaining);
+            setTodos((prev) => prev.filter((t) => t.sprintId !== id));
+            if (currentSprintId === id) {
+                setCurrentSprintId(remaining[0]?.id ?? null);
+            }
+        } catch (e) {
+            reportMutationError('Could not delete sprint', e);
+        }
     };
 
-    const addTodo = (text: string, priority: Priority, assigneeId?: number) => {
-        if (!currentSprintId) return;
-        const newTodo: Todo = {
-            id: Date.now(),
-            text,
-            completed: false,
-            priority,
-            sprintId: currentSprintId,
-            assigneeId: assigneeId ? Number(assigneeId) : undefined,
-        };
-        setTodos([newTodo, ...todos]);
+    const addTodo = async (text: string, priority: Priority, assigneeId?: number) => {
+        if (!workspaceId || !currentSprintId) return;
+        try {
+            const created = await createTask(
+                workspaceId,
+                currentSprintId,
+                text,
+                priority,
+                assigneeId
+            );
+            setTodos((prev) => [created, ...prev]);
+        } catch (e) {
+            reportMutationError('Could not add task', e);
+        }
     };
 
-    const toggleTodo = (id: number) => {
-        setTodos(
-            todos.map(todo =>
-                todo.id === id ? { ...todo, completed: !todo.completed } : todo
-            )
-        );
+    const toggleTodo = async (id: string) => {
+        const todo = todos.find((t) => t.id === id);
+        if (!todo) return;
+        const nextCompleted = !todo.completed;
+        try {
+            await updateTaskStatus(id, nextCompleted);
+            setTodos((prev) =>
+                prev.map((t) => (t.id === id ? { ...t, completed: nextCompleted } : t))
+            );
+        } catch (e) {
+            reportMutationError('Could not update task', e);
+        }
     };
 
-    const deleteTodo = (id: number) => {
-        setTodos(todos.filter(todo => todo.id !== id));
+    const deleteTodoHandler = async (id: string) => {
+        try {
+            await deleteTask(id);
+            setTodos((prev) => prev.filter((t) => t.id !== id));
+        } catch (e) {
+            reportMutationError('Could not delete task', e);
+        }
     };
 
     const addTeamMember = (name: string, role: string) => {
@@ -134,23 +192,55 @@ const PlannerPage: React.FC = () => {
     };
 
     const editTeamMember = (id: number, name: string, role: string) => {
-        setTeamMembers(teamMembers.map(member =>
-            member.id === id ? { ...member, name, role } : member));
+        setTeamMembers(
+            teamMembers.map((member) =>
+                member.id === id ? { ...member, name, role } : member
+            )
+        );
     };
 
-    const deleteTeamMember = (id: number) => {
-        setTodos(todos.map(todo => todo.assigneeId === id ? {...todo, assigneeId: undefined} : todo));
-        setTeamMembers(teamMembers.filter(member => member.id !== id));
+    const deleteTeamMember = async (id: number) => {
+        setTeamMembers(teamMembers.filter((member) => member.id !== id));
+        setTodos((prev) =>
+            prev.map((todo) =>
+                todo.assigneeId === id ? { ...todo, assigneeId: undefined } : todo
+            )
+        );
+        if (workspaceId) {
+            try {
+                await clearAssigneeFromTasks(workspaceId, id);
+            } catch (e) {
+                reportMutationError('Could not clear assignee on tasks', e);
+            }
+        }
     };
 
-    const filteredTodos = todos.filter(todo => todo.sprintId === currentSprintId);
+    const filteredTodos = todos.filter((todo) => todo.sprintId === currentSprintId);
 
     const handleSignOut = async () => {
         await getSupabase().auth.signOut();
     };
 
+    if (plannerLoading) {
+        return (
+            <div className="auth-page">
+                <p className="auth-info">Loading planner…</p>
+            </div>
+        );
+    }
+
     return (
         <div className="sprint-planner-layout">
+            {plannerError && (
+                <div className="bootstrap-error-banner" role="alert">
+                    <span>
+                        <strong>Planner:</strong> {plannerError}
+                    </span>
+                    <button type="button" className="bootstrap-error-retry" onClick={() => loadPlanner()}>
+                        Retry
+                    </button>
+                </div>
+            )}
             <TeamPanel
                 teamMembers={teamMembers}
                 addTeamMember={addTeamMember}
@@ -160,9 +250,7 @@ const PlannerPage: React.FC = () => {
             <main className="main-content-wrapper">
                 <header className="main-header">
                     <div className="session-bar">
-                        <span className="session-email">
-                            {session?.user?.email ?? ''}
-                        </span>
+                        <span className="session-email">{session?.user?.email ?? ''}</span>
                         <Link to="/invites" className="nav-link-invites">
                             Invites
                         </Link>
@@ -185,12 +273,12 @@ const PlannerPage: React.FC = () => {
                     <ul className="todo-list">
                         <AnimatePresence>
                             {filteredTodos.length > 0 ? (
-                                filteredTodos.map(todo => (
+                                filteredTodos.map((todo) => (
                                     <TodoItem
                                         key={todo.id}
                                         todo={todo}
                                         toggleTodo={toggleTodo}
-                                        deleteTodo={deleteTodo}
+                                        deleteTodo={deleteTodoHandler}
                                         teamMembers={teamMembers}
                                     />
                                 ))
@@ -202,7 +290,9 @@ const PlannerPage: React.FC = () => {
                                     exit={{ opacity: 0, y: 10 }}
                                     className="empty-state"
                                 >
-                                    {sprints.length > 0 ? "This sprint is empty. Add a task!" : "Create a sprint to get started."}
+                                    {sprints.length > 0
+                                        ? 'This sprint is empty. Add a task!'
+                                        : 'Create a sprint to get started.'}
                                 </motion.p>
                             )}
                         </AnimatePresence>
