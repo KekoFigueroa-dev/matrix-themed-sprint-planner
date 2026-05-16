@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { Edit2, X } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
 import type { WorkspaceProfile } from '../lib/teamDb';
 import type { WorkspaceRole } from '../lib/workspace';
+import { Button, Input } from '../ui';
 
 interface TeamPanelProps {
   profiles: WorkspaceProfile[];
@@ -48,56 +49,54 @@ const TeamPanel: React.FC<TeamPanelProps> = ({
   };
 
   return (
-    <div className="team-panel">
-      <h2>Team</h2>
-      <p className="team-panel-hint">
+    <>
+      <h2 className="planner-card__heading">Team</h2>
+      <p className="planner-card__hint">
         Members join via invites. Edit display names for assignees.
       </p>
-      <ul className="team-list">
+      <ul className="planner-team-list">
         {profiles.map((profile) => (
-          <li key={profile.userId} className="team-member-item">
-            <div className="member-info">
-              <span className="member-name">{profile.displayName}</span>
-              <span className="member-role">{profile.role}</span>
+          <li key={profile.userId} className="planner-team-member">
+            <div>
+              <span className="planner-team-member__name">{profile.displayName}</span>
+              <span className="planner-team-member__role">{profile.role}</span>
             </div>
             {canEdit(profile.userId) && editingUserId !== profile.userId && (
-              <div className="member-actions">
-                <button
-                  type="button"
-                  onClick={() => handleEdit(profile)}
-                  title="Edit display name"
-                >
-                  <Edit2 size={16} />
-                </button>
-              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => handleEdit(profile)}
+                title="Edit display name"
+                aria-label={`Edit ${profile.displayName}`}
+              >
+                <Edit2 size={16} />
+              </Button>
             )}
           </li>
         ))}
       </ul>
 
       {editingUserId && (
-        <form onSubmit={handleSubmit} className="team-form">
-          <h3>Edit display name</h3>
-          <input
-            type="text"
-            placeholder="Display name..."
+        <form onSubmit={handleSubmit} className="planner-team-form">
+          <Input
+            label="Display name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             maxLength={80}
             autoFocus
           />
-          <div className="form-actions">
-            <button type="submit" className="save-button" disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-            <button type="button" onClick={handleCancel} className="cancel-button">
-              <X size={16} /> Cancel
-            </button>
+          <div className="planner-team-form__actions">
+            <Button type="submit" variant="primary" loading={saving}>
+              Save
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleCancel} disabled={saving}>
+              Cancel
+            </Button>
           </div>
-          </form>
+        </form>
       )}
-    </div>
+    </>
   );
 };
 

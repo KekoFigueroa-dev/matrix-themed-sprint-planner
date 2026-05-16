@@ -7,22 +7,22 @@ interface StatsPanelProps {
 }
 
 const StatsPanel: React.FC<StatsPanelProps> = ({ todos }) => {
-  const completedTasks = todos.filter(t => t.completed).length;
+  const completedTasks = todos.filter((t) => t.completed).length;
   const inProgressTasks = todos.length - completedTasks;
 
   return (
-    <div className="stats-panel">
-      <div className="stat-item">
-        <span className="stat-value">{inProgressTasks}</span>
-        <span className="stat-label">Tasks In Progress</span>
+    <div className="planner-stats__grid">
+      <div className="planner-stat">
+        <span className="planner-stat__value">{inProgressTasks}</span>
+        <span className="planner-stat__label">In progress</span>
       </div>
-      <div className="stat-item">
-        <span className="stat-value">{completedTasks}</span>
-        <span className="stat-label">Tasks Completed</span>
+      <div className="planner-stat">
+        <span className="planner-stat__value">{completedTasks}</span>
+        <span className="planner-stat__label">Completed</span>
       </div>
-      <div className="stat-item">
-        <span className="stat-value">{todos.length}</span>
-        <span className="stat-label">Total In Sprint</span>
+      <div className="planner-stat">
+        <span className="planner-stat__value">{todos.length}</span>
+        <span className="planner-stat__label">Total in sprint</span>
       </div>
     </div>
   );

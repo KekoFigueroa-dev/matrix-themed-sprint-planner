@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Sprint } from '../types';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Button, Input, Select } from '../ui';
 
 interface SprintManagerProps {
   sprints: Sprint[];
@@ -70,43 +71,56 @@ const SprintManager: React.FC<SprintManagerProps> = ({
     }
   };
 
+  const sprintOptions = sprints.map((s) => ({ value: s.id, label: s.name }));
+
   return (
-    <div className="sprint-manager">
-      <div className="sprint-manager-row">
-        <select
+    <div className="planner-sprint">
+      <div className="planner-sprint__row">
+        <Select
+          label="Active sprint"
           value={currentSprintId ?? ''}
           onChange={(e) => onSprintChange(e.target.value)}
-          className="sprint-select"
           disabled={sprints.length === 0}
-        >
-          {sprints.map(sprint => (
-            <option key={sprint.id} value={sprint.id}>
-              {sprint.name}
-            </option>
-          ))}
-        </select>
+          options={sprintOptions.length > 0 ? sprintOptions : [{ value: '', label: 'No sprints' }]}
+        />
         {canManageSprints ? (
-          <div className="sprint-actions">
-            <button type="button" onClick={handleStartAdd} title="Add New Sprint"><Plus size={16} /> Add Sprint</button>
-            <button type="button" onClick={handleStartRename} disabled={!currentSprintId} title="Rename Current Sprint"><Edit2 size={16} /> Rename</button>
-            <button type="button" onClick={handleDelete} disabled={sprints.length <= 1 || !currentSprintId} className="delete-action" title="Delete Current Sprint"><Trash2 size={16} /> Delete</button>
+          <div className="planner-sprint__actions">
+            <Button type="button" variant="secondary" onClick={handleStartAdd}>
+              <Plus size={16} /> Add
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleStartRename} disabled={!currentSprintId}>
+              <Edit2 size={16} /> Rename
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleDelete}
+              disabled={sprints.length <= 1 || !currentSprintId}
+            >
+              <Trash2 size={16} /> Delete
+            </Button>
           </div>
         ) : (
-          <p className="sprint-member-hint">Member — switch sprint to work on tasks. Ask an admin to create sprints.</p>
+          <p className="planner-sprint__hint">
+            Member — switch sprint to work on tasks. Ask an admin to create sprints.
+          </p>
         )}
       </div>
       {canManageSprints && (adding || renaming) && (
-        <form className="sprint-inline-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            className="sprint-inline-input"
+        <form className="planner-sprint__inline" onSubmit={handleSubmit}>
+          <Input
+            label={adding ? 'New sprint name' : 'Rename sprint'}
             value={draftName}
             onChange={(e) => setDraftName(e.target.value)}
-            placeholder={adding ? 'New sprint name' : 'Rename sprint'}
+            placeholder={adding ? 'Sprint name' : 'Updated name'}
             autoFocus
           />
-          <button type="submit" className="sprint-inline-save">{adding ? 'Create' : 'Save'}</button>
-          <button type="button" className="sprint-inline-cancel" onClick={resetForms}>Cancel</button>
+          <Button type="submit" variant="primary">
+            {adding ? 'Create' : 'Save'}
+          </Button>
+          <Button type="button" variant="ghost" onClick={resetForms}>
+            Cancel
+          </Button>
         </form>
       )}
     </div>

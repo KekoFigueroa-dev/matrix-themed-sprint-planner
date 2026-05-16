@@ -2,12 +2,15 @@
 import React, { useState } from 'react';
 import { Priority } from '../types';
 import type { WorkspaceProfile } from '../lib/teamDb';
+import { Button } from '../ui';
 
 interface AddTodoFormProps {
   addTodo: (text: string, priority: Priority, assigneeUserId?: string) => void;
   profiles: WorkspaceProfile[];
   disabled?: boolean;
 }
+
+const PRIORITIES: Priority[] = ['Low', 'Medium', 'High'];
 
 const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, profiles, disabled = false }) => {
   const [text, setText] = useState('');
@@ -25,39 +28,61 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, profiles, disabled =
   };
 
   return (
-    <form onSubmit={handleSubmit} className="add-todo-form">
-      <input
-        type="text"
-        className="add-todo-input"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={disabled ? 'Select a sprint first' : 'What needs to be done?'}
-        disabled={disabled}
-      />
-      <select 
-        className="priority-select" 
-        value={priority} 
-        onChange={(e) => setPriority(e.target.value as Priority)}
-        disabled={disabled}
-      >
-        <option value="Low">Low</option>
-        <option value="Medium">Medium</option>
-        <option value="High">High</option>
-      </select>
-      <select
-        className="assignee-select"
-        value={assigneeUserId}
-        onChange={(e) => setAssigneeUserId(e.target.value)}
-        disabled={disabled}
-      >
-        <option value="">Unassigned</option>
-        {profiles.map((profile) => (
-            <option key={profile.userId} value={profile.userId}>
-                {profile.displayName}
+    <form onSubmit={handleSubmit} className="planner-add-task">
+      <div className="planner-add-task__title">
+        <label className="ui-field__label" htmlFor="add-task-title">
+          Task
+        </label>
+        <input
+          id="add-task-title"
+          type="text"
+          className="ui-input"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={disabled ? 'Select a sprint first' : 'What needs to be done?'}
+          disabled={disabled}
+        />
+      </div>
+      <div className="planner-add-task__priority">
+        <label className="ui-field__label" htmlFor="add-task-priority">
+          Priority
+        </label>
+        <select
+          id="add-task-priority"
+          className="ui-select"
+          value={priority}
+          onChange={(e) => setPriority(e.target.value as Priority)}
+          disabled={disabled}
+        >
+          {PRIORITIES.map((p) => (
+            <option key={p} value={p}>
+              {p}
             </option>
-        ))}
-      </select>
-      <button type="submit" className="add-todo-button" disabled={disabled}>Add</button>
+          ))}
+        </select>
+      </div>
+      <div className="planner-add-task__assignee">
+        <label className="ui-field__label" htmlFor="add-task-assignee">
+          Assignee
+        </label>
+        <select
+          id="add-task-assignee"
+          className="ui-select"
+          value={assigneeUserId}
+          onChange={(e) => setAssigneeUserId(e.target.value)}
+          disabled={disabled}
+        >
+          <option value="">Unassigned</option>
+          {profiles.map((profile) => (
+            <option key={profile.userId} value={profile.userId}>
+              {profile.displayName}
+            </option>
+          ))}
+        </select>
+      </div>
+      <Button type="submit" variant="primary" disabled={disabled}>
+        Add task
+      </Button>
     </form>
   );
 };

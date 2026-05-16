@@ -94,6 +94,10 @@
   margin-bottom: var(--space-4);
 }
 
+.ui-field--flush {
+  margin-bottom: 0;
+}
+
 .ui-field__label {
   font-size: var(--text-sm);
   color: var(--text-1);
