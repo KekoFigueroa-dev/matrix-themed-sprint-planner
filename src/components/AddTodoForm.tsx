@@ -1,25 +1,26 @@
 
 import React, { useState } from 'react';
-import { Priority, TeamMember } from '../types';
+import { Priority } from '../types';
+import type { WorkspaceProfile } from '../lib/teamDb';
 
 interface AddTodoFormProps {
-  addTodo: (text: string, priority: Priority, assigneeId?: number) => void;
-  teamMembers: TeamMember[];
+  addTodo: (text: string, priority: Priority, assigneeUserId?: string) => void;
+  profiles: WorkspaceProfile[];
   disabled?: boolean;
 }
 
-const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, teamMembers, disabled = false }) => {
+const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, profiles, disabled = false }) => {
   const [text, setText] = useState('');
   const [priority, setPriority] = useState<Priority>('Medium');
-  const [assigneeId, setAssigneeId] = useState<string>('');
+  const [assigneeUserId, setAssigneeUserId] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim()) {
-      addTodo(text.trim(), priority, assigneeId ? Number(assigneeId) : undefined);
+      addTodo(text.trim(), priority, assigneeUserId || undefined);
       setText('');
       setPriority('Medium');
-      setAssigneeId('');
+      setAssigneeUserId('');
     }
   };
 
@@ -45,14 +46,14 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, teamMembers, disable
       </select>
       <select
         className="assignee-select"
-        value={assigneeId}
-        onChange={(e) => setAssigneeId(e.target.value)}
+        value={assigneeUserId}
+        onChange={(e) => setAssigneeUserId(e.target.value)}
         disabled={disabled}
       >
         <option value="">Unassigned</option>
-        {teamMembers.map(member => (
-            <option key={member.id} value={member.id}>
-                {member.name}
+        {profiles.map((profile) => (
+            <option key={profile.userId} value={profile.userId}>
+                {profile.displayName}
             </option>
         ))}
       </select>

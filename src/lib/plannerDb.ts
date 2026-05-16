@@ -8,7 +8,7 @@ export interface TaskRow {
     title: string;
     status: 'todo' | 'doing' | 'done';
     priority: Priority;
-    assignee_member_id: number | null;
+    assignee_user_id: string | null;
 }
 
 export interface SprintRow {
@@ -24,7 +24,7 @@ function rowToTodo(row: TaskRow): Todo {
         completed: row.status === 'done',
         priority: row.priority,
         sprintId: row.sprint_id ?? '',
-        assigneeId: row.assignee_member_id ?? undefined,
+        assigneeUserId: row.assignee_user_id ?? undefined,
     };
 }
 
@@ -46,7 +46,7 @@ export async function fetchSprints(workspaceId: string): Promise<Sprint[]> {
 export async function fetchTasks(workspaceId: string): Promise<Todo[]> {
     const { data, error } = await getSupabase()
         .from('tasks')
-        .select('id, workspace_id, sprint_id, title, status, priority, assignee_member_id')
+        .select('id, workspace_id, sprint_id, title, status, priority, assignee_user_id')
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: false });
 
@@ -97,7 +97,7 @@ export async function createTask(
     sprintId: string,
     text: string,
     priority: Priority,
-    assigneeId?: number
+    assigneeUserId?: string
 ): Promise<Todo> {
     const { data: { user } } = await getSupabase().auth.getUser();
     const { data, error } = await getSupabase()
@@ -108,10 +108,10 @@ export async function createTask(
             title: text,
             status: 'todo',
             priority,
-            assignee_member_id: assigneeId ?? null,
+            assignee_user_id: assigneeUserId ?? null,
             created_by: user?.id ?? null,
         })
-        .select('id, workspace_id, sprint_id, title, status, priority, assignee_member_id')
+        .select('id, workspace_id, sprint_id, title, status, priority, assignee_user_id')
         .single();
 
     if (error) throw new Error(error.message);
@@ -132,19 +132,6 @@ export async function deleteTask(taskId: string): Promise<void> {
         .from('tasks')
         .delete()
         .eq('id', taskId);
-
-    if (error) throw new Error(error.message);
-}
-
-export async function clearAssigneeFromTasks(
-    workspaceId: string,
-    assigneeMemberId: number
-): Promise<void> {
-    const { error } = await getSupabase()
-        .from('tasks')
-        .update({ assignee_member_id: null })
-        .eq('workspace_id', workspaceId)
-        .eq('assignee_member_id', assigneeMemberId);
 
     if (error) throw new Error(error.message);
 }

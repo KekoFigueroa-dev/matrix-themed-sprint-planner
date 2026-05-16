@@ -1,116 +1,101 @@
 
 import React, { useState } from 'react';
-import { TeamMember } from '../types';
-import { Edit2, Plus, Trash2, X } from 'lucide-react';
+import { Edit2, X } from 'lucide-react';
+import type { WorkspaceProfile } from '../lib/teamDb';
+import type { WorkspaceRole } from '../lib/workspace';
 
 interface TeamPanelProps {
-  teamMembers: TeamMember[];
-  addTeamMember: (name: string, role: string) => void;
-  editTeamMember: (id: number, name: string, role: string) => void;
-  deleteTeamMember: (id: number) => void;
+  profiles: WorkspaceProfile[];
+  currentUserId: string | null;
+  workspaceRole: WorkspaceRole | null;
+  onSaveDisplayName: (userId: string, displayName: string) => Promise<void>;
 }
 
 const TeamPanel: React.FC<TeamPanelProps> = ({
-  teamMembers,
-  addTeamMember,
-  editTeamMember,
-  deleteTeamMember,
+  profiles,
+  currentUserId,
+  workspaceRole,
+  onSaveDisplayName,
 }) => {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [role, setRole] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handleAddNew = () => {
-    setEditingMember(null);
-    setName('');
-    setRole('');
-    setIsFormOpen(true);
-  };
+  const canEdit = (userId: string) =>
+    workspaceRole === 'admin' || userId === currentUserId;
 
-  const handleEdit = (member: TeamMember) => {
-    setEditingMember(member);
-    setName(member.name);
-    setRole(member.role);
-    setIsFormOpen(true);
+  const handleEdit = (profile: WorkspaceProfile) => {
+    if (!canEdit(profile.userId)) return;
+    setEditingUserId(profile.userId);
+    setName(profile.displayName);
   };
 
   const handleCancel = () => {
-    setIsFormOpen(false);
-    setEditingMember(null);
+    setEditingUserId(null);
     setName('');
-    setRole('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && role.trim()) {
-      if (editingMember) {
-        editTeamMember(editingMember.id, name.trim(), role.trim());
-      } else {
-        addTeamMember(name.trim(), role.trim());
-      }
+    if (!editingUserId || !name.trim() || saving) return;
+    setSaving(true);
+    try {
+      await onSaveDisplayName(editingUserId, name.trim());
       handleCancel();
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <div className="team-panel">
-      <h2>Team Members</h2>
+      <h2>Team</h2>
+      <p className="team-panel-hint">
+        Members join via invites. Edit display names for assignees.
+      </p>
       <ul className="team-list">
-        {teamMembers.map(member => (
-          <li key={member.id} className="team-member-item">
+        {profiles.map((profile) => (
+          <li key={profile.userId} className="team-member-item">
             <div className="member-info">
-              <span className="member-name">{member.name}</span>
-              <span className="member-role">{member.role}</span>
+              <span className="member-name">{profile.displayName}</span>
+              <span className="member-role">{profile.role}</span>
             </div>
-            <div className="member-actions">
-              <button onClick={() => handleEdit(member)} title="Edit Member">
-                <Edit2 size={16} />
-              </button>
-              <button 
-                onClick={() => deleteTeamMember(member.id)} 
-                title="Delete Member" 
-                className="delete-action"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
+            {canEdit(profile.userId) && editingUserId !== profile.userId && (
+              <div className="member-actions">
+                <button
+                  type="button"
+                  onClick={() => handleEdit(profile)}
+                  title="Edit display name"
+                >
+                  <Edit2 size={16} />
+                </button>
+              </div>
+            )}
           </li>
         ))}
-         {!isFormOpen && (
-            <button className="add-member-button" onClick={handleAddNew}>
-                <Plus size={16} /> Add New Member
-            </button>
-        )}
       </ul>
-     
-      {isFormOpen && (
+
+      {editingUserId && (
         <form onSubmit={handleSubmit} className="team-form">
-          <h3>{editingMember ? 'Edit Member' : 'Add Member'}</h3>
+          <h3>Edit display name</h3>
           <input
             type="text"
-            placeholder="Name..."
+            placeholder="Display name..."
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-          />
-          <input
-            type="text"
-            placeholder="Role..."
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            required
+            maxLength={80}
+            autoFocus
           />
           <div className="form-actions">
-            <button type="submit" className="save-button">
-              {editingMember ? 'Save Changes' : 'Add Member'}
+            <button type="submit" className="save-button" disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
             </button>
             <button type="button" onClick={handleCancel} className="cancel-button">
-                Cancel
+              <X size={16} /> Cancel
             </button>
           </div>
-        </form>
+          </form>
       )}
     </div>
   );

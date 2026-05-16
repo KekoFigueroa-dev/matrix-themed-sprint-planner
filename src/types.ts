@@ -1,6 +1,8 @@
 
 export type Priority = 'High' | 'Medium' | 'Low';
 
+export type WorkspaceRole = 'admin' | 'member';
+
 export interface Sprint {
   id: string;
   name: string;
@@ -12,11 +14,5 @@ export interface Todo {
   completed: boolean;
   priority: Priority;
   sprintId: string;
-  assigneeId?: number;
-}
-
-export interface TeamMember {
-  id: number;
-  name: string;
-  role: string;
+  assigneeUserId?: string;
 }
