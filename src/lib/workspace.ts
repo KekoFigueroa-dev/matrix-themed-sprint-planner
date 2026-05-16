@@ -7,7 +7,25 @@ export interface ActiveWorkspaceContext {
     role: WorkspaceRole;
 }
 
-/** First workspace membership for the signed-in user (V2 single-workspace flow). */
+type MembershipRow = {
+    workspace_id: string;
+    role: string;
+    workspaces: { owner_id: string } | { owner_id: string }[] | null;
+};
+
+function workspaceOwnerId(row: MembershipRow): string | null {
+    const w = row.workspaces;
+    if (!w) return null;
+    if (Array.isArray(w)) return w[0]?.owner_id ?? null;
+    return w.owner_id;
+}
+
+/**
+ * Active workspace for the planner.
+ * If the user belongs to multiple workspaces (own + invited), prefer the
+ * collaborative one (membership where they are not workspace owner) so
+ * invitees see member UI instead of their solo "My workspace" admin shell.
+ */
 export async function fetchActiveWorkspaceContext(): Promise<ActiveWorkspaceContext | null> {
     const supabase = getSupabase();
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
@@ -15,24 +33,42 @@ export async function fetchActiveWorkspaceContext(): Promise<ActiveWorkspaceCont
 
     const { data, error } = await supabase
         .from('workspace_members')
-        .select('workspace_id, role')
+        .select(
+            `
+            workspace_id,
+            role,
+            workspaces (
+                owner_id
+            )
+        `
+        )
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-        .limit(1);
+        .order('created_at', { ascending: true });
 
     if (error) {
         console.error('fetchActiveWorkspaceContext:', error.message);
         return null;
     }
 
-    const row = data?.[0];
-    if (!row?.workspace_id || (row.role !== 'admin' && row.role !== 'member')) {
-        return null;
-    }
+    const rows = (data ?? []) as MembershipRow[];
+    const valid = rows.filter(
+        (r) =>
+            r.workspace_id &&
+            (r.role === 'admin' || r.role === 'member')
+    );
+
+    if (valid.length === 0) return null;
+
+    const collaborative = valid.find((r) => {
+        const ownerId = workspaceOwnerId(r);
+        return ownerId != null && ownerId !== user.id;
+    });
+
+    const pick = collaborative ?? valid[0];
 
     return {
-        workspaceId: row.workspace_id,
-        role: row.role as WorkspaceRole,
+        workspaceId: pick.workspace_id,
+        role: pick.role as WorkspaceRole,
     };
 }
 
