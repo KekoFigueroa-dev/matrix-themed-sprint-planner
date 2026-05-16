@@ -51,13 +51,17 @@ This lets anyone (including you later) **resume from the last documented state**
 
 | Area        | Location |
 |------------|----------|
-| App / state | `src/App.tsx` (CRA monolith + `localStorage`) |
-| Types      | `src/types.ts` |
-| Styles     | `src/styles.css` |
+| Routes / auth gate | `src/App.tsx` — session via `onAuthStateChange` + `getSession` |
+| Supabase client | `src/lib/supabaseClient.ts` |
+| Workspace + planner data | `src/lib/workspace.ts`, `src/lib/plannerDb.ts` |
+| Planner UI | `src/pages/PlannerPage.tsx` — sprints/tasks from DB; team in `localStorage` |
+| Auth pages | `src/pages/LoginPage.tsx`, `RegisterPage.tsx` |
+| Invites | `src/pages/InvitesPage.tsx` |
+| Types | `src/types.ts` — `Sprint`/`Todo` use string UUID ids |
+| Styles | `src/styles.css` |
 | Components | `src/components/*` |
-| Entry      | `src/index.tsx` |
-| V2 docs    | `docs/v2.md`, `docs/rls.md` |
-| DB SQL     | `supabase/migrations/*.sql` |
+| V2 docs | `docs/v2.md`, `docs/rls.md` |
+| DB SQL | `supabase/migrations/*.sql` — apply **in order** (see README) |
 
 After Next.js migration, prefer `app/` and `lib/supabase/` — keep migrations in `supabase/migrations/` and document path changes in `docs/v2.md`.
 
@@ -95,13 +99,13 @@ V2 REQUIREMENTS (see docs/v2.md for detail):
 - Members CRUD tasks; admins manage projects/sprints/invites
 - Deploy to Vercel
 
-WORK PLAN (implement in order — update progress table in docs/v2.md when done):
-Phase 0: repo read + docs aligned
-Phase 1: schema + migrations + RLS (+ docs/rls.md if policies change)
-Phase 2: auth + ensure_workspace RPC
-Phase 3: invites + accept RPC + UI
-Phase 4: role-based UI + collaboration polish + design system
-Phase 5: Vercel + README + optional smoke test
+WORK PLAN (update progress table in docs/v2.md when done):
+Phase 0–1: Done (schema + RLS)
+Phase 2–3: Done (auth, workspace, invites)
+Planner slice: Done (sprints/tasks in Supabase; team panel still localStorage)
+Phase 4: Done (role-based UI, member sprint gating)
+Phase 5: NEXT — Vercel deploy + live smoke test
+Optional later: Next.js migration; wire projects table; remove node_modules from git history
 
 OUTPUT:
 - List exact files to create/modify and why.
