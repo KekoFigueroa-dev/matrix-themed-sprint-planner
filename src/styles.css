@@ -80,11 +80,69 @@ h2 {
 /* --- Sprint Manager --- */
 .sprint-manager {
   display: flex;
-  gap: 16px;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
   border: 1px solid #008000;
   padding: 8px;
   margin-bottom: 16px;
+}
+
+.sprint-manager-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.sprint-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 4px;
+  border-top: 1px dashed #004d00;
+}
+
+.sprint-inline-input {
+  flex: 1;
+  min-width: 160px;
+  background: #0a0a0a;
+  border: 1px solid #008000;
+  color: #00FF00;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.sprint-inline-input:focus {
+  outline: none;
+  border-color: #00FF00;
+}
+
+.sprint-inline-save,
+.sprint-inline-cancel {
+  background: transparent;
+  border: 1px solid #008000;
+  color: #008000;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.sprint-inline-save:hover {
+  color: #00FF00;
+  border-color: #00FF00;
+}
+
+.sprint-inline-cancel {
+  border-color: #444;
+  color: #888;
+}
+
+.sprint-inline-cancel:hover {
+  color: #ccc;
+  border-color: #888;
 }
 
 .sprint-select {

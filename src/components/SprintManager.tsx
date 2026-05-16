@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Sprint } from '../types';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 
@@ -20,19 +20,43 @@ const SprintManager: React.FC<SprintManagerProps> = ({
   onRenameSprint,
   onDeleteSprint
 }) => {
-  const handleAdd = () => {
-    const name = prompt('Enter new sprint name:');
-    if (name) {
-      onAddSprint(name);
-    }
+  const [adding, setAdding] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [draftName, setDraftName] = useState('');
+
+  const resetForms = () => {
+    setAdding(false);
+    setRenaming(false);
+    setDraftName('');
   };
 
-  const handleRename = () => {
+  const handleStartAdd = () => {
+    setRenaming(false);
+    setAdding(true);
+    setDraftName('');
+  };
+
+  const handleStartRename = () => {
     if (!currentSprintId) return;
     const currentSprint = sprints.find(s => s.id === currentSprintId);
-    const newName = prompt('Enter new name for the sprint:', currentSprint?.name);
-    if (newName && currentSprintId) {
-      onRenameSprint(currentSprintId, newName);
+    setAdding(false);
+    setRenaming(true);
+    setDraftName(currentSprint?.name ?? '');
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = draftName.trim();
+    if (!name) return;
+
+    if (adding) {
+      onAddSprint(name);
+      resetForms();
+      return;
+    }
+    if (renaming && currentSprintId) {
+      onRenameSprint(currentSprintId, name);
+      resetForms();
     }
   };
 
@@ -46,23 +70,39 @@ const SprintManager: React.FC<SprintManagerProps> = ({
 
   return (
     <div className="sprint-manager">
-      <select
-        value={currentSprintId ?? ''}
-        onChange={(e) => onSprintChange(Number(e.target.value))}
-        className="sprint-select"
-        disabled={sprints.length === 0}
-      >
-        {sprints.map(sprint => (
-          <option key={sprint.id} value={sprint.id}>
-            {sprint.name}
-          </option>
-        ))}
-      </select>
-      <div className="sprint-actions">
-        <button onClick={handleAdd} title="Add New Sprint"><Plus size={16} /> Add Sprint</button>
-        <button onClick={handleRename} disabled={!currentSprintId} title="Rename Current Sprint"><Edit2 size={16} /> Rename</button>
-        <button onClick={handleDelete} disabled={sprints.length <= 1 || !currentSprintId} className="delete-action" title="Delete Current Sprint"><Trash2 size={16} /> Delete</button>
+      <div className="sprint-manager-row">
+        <select
+          value={currentSprintId ?? ''}
+          onChange={(e) => onSprintChange(Number(e.target.value))}
+          className="sprint-select"
+          disabled={sprints.length === 0}
+        >
+          {sprints.map(sprint => (
+            <option key={sprint.id} value={sprint.id}>
+              {sprint.name}
+            </option>
+          ))}
+        </select>
+        <div className="sprint-actions">
+          <button type="button" onClick={handleStartAdd} title="Add New Sprint"><Plus size={16} /> Add Sprint</button>
+          <button type="button" onClick={handleStartRename} disabled={!currentSprintId} title="Rename Current Sprint"><Edit2 size={16} /> Rename</button>
+          <button type="button" onClick={handleDelete} disabled={sprints.length <= 1 || !currentSprintId} className="delete-action" title="Delete Current Sprint"><Trash2 size={16} /> Delete</button>
+        </div>
       </div>
+      {(adding || renaming) && (
+        <form className="sprint-inline-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            className="sprint-inline-input"
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            placeholder={adding ? 'New sprint name' : 'Rename sprint'}
+            autoFocus
+          />
+          <button type="submit" className="sprint-inline-save">{adding ? 'Create' : 'Save'}</button>
+          <button type="button" className="sprint-inline-cancel" onClick={resetForms}>Cancel</button>
+        </form>
+      )}
     </div>
   );
 };
