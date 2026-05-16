@@ -221,14 +221,14 @@ Full checklist: [docs/v2.md § Phase 5 — Maintainer test plan](./docs/v2.md#ph
 
 ## Git workflow (branches)
 
-Use **`main`** as the integration branch. For new work:
+**Rule:** only **`main`** stays forever. One active feature branch at a time.
 
-1. `git checkout main && git pull`
-2. Branch (e.g. `feat/my-feature`)
-3. Push → verify **Vercel Preview** deploy (same Supabase env vars on **Preview**)
-4. Smoke-test preview URL → open PR → merge to `main` → production redeploys
+1. `git checkout main && git pull origin main`
+2. `git checkout -b feat/v2.1-slice-N-short-description`
+3. Push → **Vercel Preview** smoke test (env vars on **Production + Preview**)
+4. PR → merge → **delete branch** on GitHub and locally
 
-Delete merged feature branches locally and on GitHub when done. See [AGENTS.md](./AGENTS.md).
+**After merge:** `git fetch origin --prune` and remove stale branches (see [AGENTS.md § Branch hygiene](./AGENTS.md#branch-hygiene-required)).
 
 ---
 

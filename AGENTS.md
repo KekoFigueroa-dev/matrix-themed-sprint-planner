@@ -46,6 +46,26 @@ This lets anyone (including you later) **resume from the last documented state**
 - Do not expand scope into a Jira-like product; out-of-scope list is in [docs/v2.md](./docs/v2.md#out-of-scope-guardrails--do-not-creep).
 - **Repository hygiene:** `node_modules` must not be committed — see [README](./README.md). `main` already untracks `node_modules`; use `npm ci` locally and `vercel.json` install on deploy.
 
+### Branch hygiene (required)
+
+- **Only `main` is long-lived.** Every slice = **new branch from latest `main`** → PR → merge → **delete branch** (local + GitHub).
+- **Naming:** `feat/v2.1-slice-N-short-name`, `fix/thing`, `docs/thing`, `chore/thing` — one purpose per branch.
+- **Never** keep stacking on merged branches (`feat/vercel-deploy`, old slice branches, etc.).
+- **After merge:** `git checkout main && git pull` then delete the feature branch locally and on GitHub.
+- **Before new work:** `git branch` should show **`main`** plus at most **one** active feature branch.
+
+**Cleanup commands (maintainer):**
+
+```bash
+git fetch origin --prune
+git checkout main && git pull origin main
+git branch --merged main | grep -v '^\* main$' | xargs -r git branch -d
+# Delete merged remotes on GitHub (repeat or use gh):
+git push origin --delete BRANCH_NAME
+```
+
+Or: GitHub → **Branches** → delete any branch whose PR is **Merged**.
+
 ---
 
 ## Where to look in the tree (today)
