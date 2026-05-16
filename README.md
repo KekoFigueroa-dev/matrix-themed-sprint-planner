@@ -24,7 +24,8 @@ Web-based sprint planning and tasks for small teams. **V2** targets portfolio-gr
 | **Invites** | `/invites` — admin invite/revoke; invitee signs in with **invited email** and **Accept** (no invite email sent by the app) |
 | **Planner** | **Sprints + tasks** → Supabase (`sprints`, `tasks`, workspace-scoped). **Team panel** → `localStorage` only |
 | **Permissions** | Role badge; members manage tasks only; admins manage sprints (Phase 4) |
-| **Not in UI yet** | `projects` table; `doing` task status; Vercel deploy (Phase 5) |
+| **Deploy** | `vercel.json` ready; see [Deployment (Vercel)](#deployment-vercel) |
+| **Not in UI yet** | `projects` table; `doing` task status |
 | **V2 framework target** | Next.js App Router — see [docs/v2.md](./docs/v2.md) |
 
 ---
@@ -147,9 +148,41 @@ Browser (CRA + React Router) ──► Supabase Auth (JWT)
 
 ---
 
-## Deployment (Vercel) — Phase 5
+## Deployment (Vercel)
 
-Not live yet. When ready: connect repo, set `REACT_APP_SUPABASE_*` (or `NEXT_PUBLIC_*` after Next migration), match Supabase redirect URLs to the Vercel domain. See [docs/v2.md § Phase 5](./docs/v2.md#phase-5--deployment--credibility-05-10-h).
+**Live demo:** add your production URL here after deploy (e.g. `https://matrix-themed-sprint-planner.vercel.app`).
+
+This repo includes [`vercel.json`](./vercel.json) (CRA build + SPA rewrites for React Router).
+
+### 1. Import project (Vercel dashboard)
+
+1. [vercel.com](https://vercel.com) → **Add New** → **Project** → import `matrix-themed-sprint-planner` from GitHub.
+2. Framework preset: **Create React App** (or Other — settings below are set in `vercel.json`).
+3. **Environment variables** (Production + Preview):
+
+| Name | Value |
+|------|--------|
+| `REACT_APP_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
+| `REACT_APP_SUPABASE_ANON_KEY` | Same → `anon` public key, **or** `REACT_APP_SUPABASE_PUBLISHABLE_KEY` |
+
+4. **Deploy**. Copy the `*.vercel.app` URL.
+
+### 2. Supabase Auth URLs (required)
+
+Supabase → **Authentication** → **URL configuration**:
+
+| Field | Value |
+|-------|--------|
+| **Site URL** | `https://YOUR_VERCEL_DOMAIN` |
+| **Redirect URLs** | `https://YOUR_VERCEL_DOMAIN/**` |
+
+Keep `http://localhost:3000` and `http://localhost:3000/**` for local dev.
+
+### 3. Production smoke test
+
+Sign up → planner → create sprint/task → hard refresh on `/invites` and `/login` (SPA routes). Optional: admin invites member (register with invited email → `/invites` → Accept).
+
+Full checklist: [docs/v2.md § Phase 5 — Maintainer test plan](./docs/v2.md#phase-5--maintainer-test-plan).
 
 ---
 
