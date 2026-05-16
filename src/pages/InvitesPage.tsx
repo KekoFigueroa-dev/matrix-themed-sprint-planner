@@ -220,6 +220,14 @@ const InvitesPage: React.FC = () => {
 
                 {error && <InlineAlert variant="error">{error}</InlineAlert>}
 
+                {adminWorkspaces.length > 0 && invitesForSelectedAdminWs.length > 0 && (
+                    <InlineAlert variant="info">
+                        You have {invitesForSelectedAdminWs.length} outstanding invite
+                        {invitesForSelectedAdminWs.length === 1 ? '' : 's'} for this workspace — scroll
+                        down to the <span className="text-highlight">admin</span> section to manage them.
+                    </InlineAlert>
+                )}
+
                 <Card>
                     <h2 className="invites-section-heading">
                         Pending for you
@@ -238,6 +246,12 @@ const InvitesPage: React.FC = () => {
                     {pendingForMe.length === 0 ? (
                         <div>
                             <p className="invites-empty">No pending invites for this account.</p>
+                            {adminWorkspaces.length > 0 && (
+                                <p className="invites-empty" style={{ marginTop: 'var(--space-2)' }}>
+                                    Invites you <strong>created for others</strong> appear in the admin
+                                    section below, not here.
+                                </p>
+                            )}
                             <ol className="invites-steps">
                                 <li>Ask your workspace admin to invite your email.</li>
                                 <li>
