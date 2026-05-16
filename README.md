@@ -8,7 +8,8 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 
 | Doc | Purpose |
 |-----|--------|
-| **[docs/v2.md](./docs/v2.md)** | Full V2 spec: **progress tracker**, phases 0–5, entities, permission matrix, flows, maintainer test plans |
+| **[docs/v2.md](./docs/v2.md)** | V2 spec (phases 0–5 **Done**): entities, permission matrix, flows |
+| **[docs/v2.1.md](./docs/v2.1.md)** | V2.1: vaporwave polish + team in Supabase — [QA checklist](./docs/v2.1-qa.md) |
 | **[docs/rls.md](./docs/rls.md)** | RLS policy model, RPC patterns, testing checklist |
 | **[AGENTS.md](./AGENTS.md)** | Agent rules, handoff habits, **Cursor bootstrap prompt** |
 
