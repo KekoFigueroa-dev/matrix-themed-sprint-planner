@@ -339,7 +339,7 @@
 /* --- Invites page (V2.1) --- */
 .invites-page {
   min-height: 100vh;
-  overflow-y: auto;
+  min-height: 100dvh;
   box-sizing: border-box;
   padding: var(--space-6) var(--space-4) var(--space-8);
   background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(184, 75, 255, 0.16), transparent),
