@@ -1,28 +1,74 @@
-/* --- Design tokens (Phase 4) --- */
+/* V2.1 design tokens + UI primitives */
+@import './ui/ui.css';
+
 :root {
-  --color-bg: #000;
-  --color-bg-panel: #0a0a0a;
+  --bg-0: #0b0614;
+  --bg-1: #120a22;
+  --bg-2: #1a0f2e;
+  --border-0: rgba(255, 255, 255, 0.08);
+  --text-0: rgba(255, 255, 255, 0.92);
+  --text-1: rgba(255, 255, 255, 0.72);
+  --text-2: rgba(255, 255, 255, 0.52);
+  --accent-0: #ff4fd8;
+  --accent-1: #b84bff;
+  --danger-0: #ff3b6b;
+  --success-0: #2ee59d;
+  --warning-0: #ffcf5a;
+  --focus-ring: rgba(255, 79, 216, 0.45);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Inter, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --shadow-1: 0 10px 30px rgba(0, 0, 0, 0.35);
+  /* Legacy planner aliases (slice 6 will remove hardcoded greens) */
+  --color-bg: var(--bg-0);
+  --color-bg-panel: var(--bg-1);
   --color-fg: #00ff00;
   --color-fg-muted: #00aa00;
   --color-border: #00ff00;
-  --color-danger: #ff4444;
+  --color-danger: var(--danger-0);
   --color-warn-bg: #331100;
   --color-warn-border: #ff6600;
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --radius-sm: 4px;
+  --space-xs: var(--space-1);
+  --space-sm: var(--space-2);
+  --space-md: var(--space-4);
+  --space-lg: var(--space-6);
 }
 
-/* --- Main Layout & Font --- */
+::selection {
+  background: rgba(255, 79, 216, 0.28);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* --- Main layout --- */
 body {
-  font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
-  background-color: var(--color-bg);
-  color: var(--color-fg);
+  font-family: var(--font-sans);
+  background-color: var(--bg-0);
+  color: var(--text-0);
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent body scroll */
+  overflow: hidden;
+}
+
+.sprint-planner-layout,
+.sprint-planner-layout h1,
+.sprint-planner-layout h2,
+.sprint-planner-layout button,
+.sprint-planner-layout input,
+.sprint-planner-layout select {
+  font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
 }
 
 .sprint-planner-layout {

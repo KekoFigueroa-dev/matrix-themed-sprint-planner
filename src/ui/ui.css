@@ -1,0 +1,308 @@
+/* V2.1 UI primitives — use tokens from styles.css :root */
+
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.25;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.ui-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.ui-btn:disabled,
+.ui-btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ui-btn--full {
+  width: 100%;
+}
+
+.ui-btn--primary {
+  background: var(--accent-0);
+  color: var(--bg-0);
+  border-color: var(--accent-0);
+}
+
+.ui-btn--primary:hover:not(:disabled) {
+  box-shadow: 0 0 20px rgba(255, 79, 216, 0.35);
+}
+
+.ui-btn--secondary {
+  background: var(--bg-2);
+  color: var(--text-0);
+  border-color: var(--border-0);
+}
+
+.ui-btn--secondary:hover:not(:disabled) {
+  border-color: rgba(255, 79, 216, 0.35);
+}
+
+.ui-btn--ghost {
+  background: transparent;
+  color: var(--text-1);
+  border-color: transparent;
+}
+
+.ui-btn--ghost:hover:not(:disabled) {
+  color: var(--text-0);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ui-btn--danger {
+  background: transparent;
+  color: var(--danger-0);
+  border-color: rgba(255, 59, 107, 0.45);
+}
+
+.ui-btn--danger:hover:not(:disabled) {
+  background: rgba(255, 59, 107, 0.12);
+}
+
+.ui-btn__spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ui-spin 0.65s linear infinite;
+}
+
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.ui-field__label {
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  font-weight: 500;
+}
+
+.ui-field__hint {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  margin: 0;
+}
+
+.ui-field__error {
+  font-size: var(--text-xs);
+  color: var(--danger-0);
+  margin: 0;
+}
+
+.ui-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  color: var(--text-0);
+  background: var(--bg-0);
+  border: 1px solid var(--border-0);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-3);
+}
+
+.ui-input::placeholder {
+  color: var(--text-2);
+}
+
+.ui-input:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.ui-input:focus {
+  outline: none;
+  border-color: var(--accent-0);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.ui-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ui-input--error {
+  border-color: var(--danger-0);
+}
+
+.ui-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(255, 59, 107, 0.35);
+}
+
+.ui-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border-0);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-6);
+}
+
+.ui-card__title {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-0);
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-0);
+}
+
+.ui-badge--admin {
+  color: var(--accent-0);
+  background: rgba(255, 79, 216, 0.1);
+  border-color: rgba(255, 79, 216, 0.35);
+}
+
+.ui-badge--member {
+  color: var(--text-1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ui-alert {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  margin-bottom: var(--space-4);
+}
+
+.ui-alert__message {
+  margin: 0;
+  flex: 1;
+}
+
+.ui-alert--error {
+  color: #ffc4d4;
+  background: rgba(255, 59, 107, 0.12);
+  border: 1px solid rgba(255, 59, 107, 0.35);
+}
+
+.ui-alert--warning {
+  color: #ffe9a8;
+  background: rgba(255, 207, 90, 0.1);
+  border: 1px solid rgba(255, 207, 90, 0.35);
+}
+
+.ui-alert--info {
+  color: var(--text-0);
+  background: rgba(184, 75, 255, 0.1);
+  border: 1px solid rgba(184, 75, 255, 0.35);
+}
+
+.code-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: rgba(255, 79, 216, 0.1);
+  border: 1px solid rgba(255, 79, 216, 0.25);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--text-1);
+}
+
+.text-highlight {
+  background: rgba(255, 79, 216, 0.1);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  box-sizing: border-box;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(184, 75, 255, 0.18), transparent),
+    var(--bg-0);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-card__subtitle {
+  text-align: center;
+  margin: calc(-1 * var(--space-2)) 0 var(--space-6) 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.auth-card__chip-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.auth-footer {
+  margin: var(--space-6) 0 0 0;
+  text-align: center;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.auth-footer a {
+  color: var(--accent-0);
+  text-decoration: none;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.auth-footer a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.auth-pre {
+  text-align: left;
+  overflow-x: auto;
+  background: var(--bg-0);
+  border: 1px solid var(--border-0);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-1);
+  margin: 0 0 var(--space-4) 0;
+}

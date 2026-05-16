@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
+import { Button, Card, InlineAlert, Input } from '../ui';
 
 const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
@@ -36,40 +37,42 @@ const RegisterPage: React.FC = () => {
 
     return (
         <div className="auth-page">
-            <form className="auth-form" onSubmit={handleSubmit}>
-                <h1 className="auth-title">Register</h1>
-                {error && <p className="auth-error" role="alert">{error}</p>}
-                {info && <p className="auth-info" role="status">{info}</p>}
-                <label className="auth-label">
-                    Email
-                    <input
-                        className="auth-input"
+            <Card title="Create account" className="auth-card">
+                <p className="auth-card__subtitle">Your workspace is created on first sign-in</p>
+                <div className="auth-card__chip-row">
+                    <span className="code-label">Email + password</span>
+                </div>
+                {error && <InlineAlert variant="error">{error}</InlineAlert>}
+                {info && <InlineAlert variant="info">{info}</InlineAlert>}
+                <form onSubmit={handleSubmit}>
+                    <Input
+                        label="Email"
                         type="email"
                         autoComplete="email"
                         value={email}
                         onChange={(ev) => setEmail(ev.target.value)}
                         required
+                        disabled={loading}
                     />
-                </label>
-                <label className="auth-label">
-                    Password
-                    <input
-                        className="auth-input"
+                    <Input
+                        label="Password"
                         type="password"
                         autoComplete="new-password"
                         minLength={6}
+                        hint="At least 6 characters"
                         value={password}
                         onChange={(ev) => setPassword(ev.target.value)}
                         required
+                        disabled={loading}
                     />
-                </label>
-                <button type="submit" className="auth-submit" disabled={loading}>
-                    {loading ? 'Creating account…' : 'Create account'}
-                </button>
+                    <Button type="submit" fullWidth loading={loading}>
+                        {loading ? 'Creating account…' : 'Create account'}
+                    </Button>
+                </form>
                 <p className="auth-footer">
                     Already have an account? <Link to="/login">Sign in</Link>
                 </p>
-            </form>
+            </Card>
         </div>
     );
 };
