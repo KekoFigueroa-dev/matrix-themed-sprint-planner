@@ -151,6 +151,35 @@
   box-shadow: 0 0 0 3px rgba(255, 59, 107, 0.35);
 }
 
+.ui-select {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  color: var(--text-0);
+  background: var(--bg-0);
+  border: 1px solid var(--border-0);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-3);
+  cursor: pointer;
+}
+
+.ui-select:focus {
+  outline: none;
+  border-color: var(--accent-0);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.ui-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ui-select option {
+  background: var(--bg-1);
+  color: var(--text-0);
+}
+
 .ui-card {
   background: var(--bg-1);
   border: 1px solid var(--border-0);
@@ -305,4 +334,163 @@
   font-size: var(--text-xs);
   color: var(--text-1);
   margin: 0 0 var(--space-4) 0;
+}
+
+/* --- Invites page (V2.1) --- */
+.invites-page {
+  min-height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: var(--space-6) var(--space-4) var(--space-8);
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(184, 75, 255, 0.16), transparent),
+    var(--bg-0);
+}
+
+.invites-page__inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.invites-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.invites-page__title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-0);
+  letter-spacing: -0.02em;
+}
+
+.invites-page__back {
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  text-decoration: none;
+}
+
+.invites-page__back:hover {
+  color: var(--accent-0);
+}
+
+.invites-page__back:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.invites-section-heading {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-0);
+}
+
+.invites-section-heading .code-label {
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
+.invites-steps {
+  margin: 0 0 var(--space-4) 0;
+  padding-left: var(--space-6);
+  color: var(--text-1);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.invites-steps li {
+  margin-bottom: var(--space-2);
+}
+
+.invites-steps strong {
+  color: var(--text-0);
+  font-weight: 600;
+}
+
+.invites-empty {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.invite-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.invite-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-0);
+  border: 1px solid var(--border-0);
+  border-radius: var(--radius-sm);
+}
+
+.invite-list__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.invite-list__email {
+  font-size: var(--text-sm);
+  color: var(--text-0);
+  word-break: break-all;
+}
+
+.invite-list__role {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+}
+
+.invite-list__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.invites-subheading {
+  margin: var(--space-6) 0 var(--space-3) 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.invites-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+@media (max-width: 520px) {
+  .invite-list__item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .invite-list__actions {
+    width: 100%;
+  }
+
+  .invite-list__actions .ui-btn {
+    flex: 1;
+  }
 }
