@@ -6,7 +6,7 @@ Companion: [V2 spec](./v2.md) (entities, flows, phases).
 
 **Executable policies:** [../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql](../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql) — treat as source of truth; this doc explains intent. When policies change, add a **new** migration file and update this narrative.
 
-**Planner columns:** [../supabase/migrations/20250517120000_tasks_planner_fields.sql](../supabase/migrations/20250517120000_tasks_planner_fields.sql) adds `priority` and `assignee_member_id` on `tasks` (app-local team reference; not an FK to `auth.users`).
+**Planner columns:** [../supabase/migrations/20250517120000_tasks_planner_fields.sql](../supabase/migrations/20250517120000_tasks_planner_fields.sql) adds `priority` and legacy `assignee_member_id`. [../supabase/migrations/20250518120000_workspace_profiles.sql](../supabase/migrations/20250518120000_workspace_profiles.sql) adds `workspace_profiles` (roster display names) and `tasks.assignee_user_id` → `auth.users`.
 
 ---
 
@@ -49,7 +49,16 @@ Implementations live in SQL migrations; names may be prefixed (e.g. `public.is_w
 ### `tasks`
 
 - **SELECT / INSERT / UPDATE / DELETE:** any **member** (admin or member) of the workspace for `tasks.workspace_id`.
-- Columns used by the CRA planner: `title`, `status` (`todo` | `doing` | `done`), `sprint_id`, `priority`, `assignee_member_id` (optional; maps to local team list in the browser).
+- Columns used by the CRA planner: `title`, `status` (`todo` | `doing` | `done`), `sprint_id`, `priority`, `assignee_user_id` (optional; FK to `auth.users`).
+
+### `workspace_profiles`
+
+- **SELECT:** any **member** of the workspace.
+- **INSERT:** self only, when already a member (`user_id = auth.uid()`).
+- **UPDATE:** own row **or** **admin** for that workspace.
+- **DELETE:** not exposed to clients (profiles removed via cascade when user/workspace deleted).
+
+RPC `ensure_workspace_profiles(workspace_id)` backfills profile rows for all members (security definer; caller must be a member).
 
 ### Non-members
 
@@ -62,7 +71,8 @@ Policies should evaluate so **no rows** are visible for workspaces the user does
 | Function | Purpose |
 |----------|---------|
 | `ensure_workspace_for_user()` | Idempotent: owned workspace + admin membership for `auth.uid()`; client calls after sign-in (Phase 2). Implemented in SQL migration; runs as **security definer**. |
-| `accept_workspace_invite(p_invite_id uuid)` | **Shipped (Phase 3):** verifies `auth.users.email` matches invite row; upserts `workspace_members`; deletes invite; returns workspace id. Client: `.rpc('accept_workspace_invite', { p_invite_id })`. |
+| `accept_workspace_invite(p_invite_id uuid)` | **Shipped (Phase 3):** verifies `auth.users.email` matches invite row; upserts `workspace_members`; creates `workspace_profiles` row; deletes invite; returns workspace id. Client: `.rpc('accept_workspace_invite', { p_invite_id })`. |
+| `ensure_workspace_profiles(p_workspace_id uuid)` | **V2.1 slice 5:** idempotent backfill of `workspace_profiles` for all members; caller must be a member. |
 
 Both RPCs run as **security definer** with a fixed `search_path`; membership writes stay centralized and auditable.
 

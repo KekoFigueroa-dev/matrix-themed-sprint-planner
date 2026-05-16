@@ -91,6 +91,7 @@ Run each file once in **SQL Editor** (or `supabase db push` if CLI is linked):
 | 2 | `supabase/migrations/20250515120000_ensure_workspace_for_user.sql` | Bootstrap workspace RPC |
 | 3 | `supabase/migrations/20250516180000_accept_workspace_invite.sql` | Accept invite RPC |
 | 4 | `supabase/migrations/20250517120000_tasks_planner_fields.sql` | `priority`, `assignee_member_id` on `tasks` |
+| 5 | `supabase/migrations/20250518120000_workspace_profiles.sql` | `workspace_profiles`, `tasks.assignee_user_id`, `ensure_workspace_profiles` RPC |
 
 **Dashboard checklist**
 

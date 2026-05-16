@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Todo, Priority, TeamMember, Sprint } from '../types';
+import { Todo, Priority, Sprint } from '../types';
 import TodoItem from '../components/TodoItem';
 import AddTodoForm from '../components/AddTodoForm';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -13,7 +13,6 @@ import { fetchActiveWorkspaceContext, type WorkspaceRole } from '../lib/workspac
 import { errorMessageFromUnknown } from '../lib/supabaseErrors';
 import { usePlannerBodyLock } from '../hooks/usePlannerBodyLock';
 import {
-    clearAssigneeFromTasks,
     createSprint,
     createTask,
     deleteSprintAndTasks,
@@ -23,6 +22,12 @@ import {
     updateSprintName,
     updateTaskStatus,
 } from '../lib/plannerDb';
+import {
+    ensureWorkspaceProfiles,
+    fetchWorkspaceProfiles,
+    updateWorkspaceDisplayName,
+    type WorkspaceProfile,
+} from '../lib/teamDb';
 
 function currentSprintStorageKey(workspaceId: string): string {
     return `planner:currentSprintId:${workspaceId}`;
@@ -41,26 +46,14 @@ const PlannerPage: React.FC = () => {
 
     const [sprints, setSprints] = useState<Sprint[]>([]);
     const [todos, setTodos] = useState<Todo[]>([]);
-    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const [teamProfiles, setTeamProfiles] = useState<WorkspaceProfile[]>([]);
     const [currentSprintId, setCurrentSprintId] = useState<string | null>(null);
-    const [teamStorageReady, setTeamStorageReady] = useState(false);
 
     useEffect(() => {
         getSupabase()
             .auth.getSession()
             .then(({ data: { session: s } }) => setSession(s));
     }, []);
-
-    useEffect(() => {
-        const savedMembers = localStorage.getItem('teamMembers');
-        setTeamMembers(savedMembers ? JSON.parse(savedMembers) : []);
-        setTeamStorageReady(true);
-    }, []);
-
-    useEffect(() => {
-        if (!teamStorageReady) return;
-        localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
-    }, [teamMembers, teamStorageReady]);
 
     const loadPlanner = useCallback(async () => {
         setPlannerLoading(true);
@@ -73,6 +66,7 @@ const PlannerPage: React.FC = () => {
                 setWorkspaceRole(null);
                 setSprints([]);
                 setTodos([]);
+                setTeamProfiles([]);
                 setCurrentSprintId(null);
                 setMemberAwaitingSprint(false);
                 return;
@@ -93,9 +87,14 @@ const PlannerPage: React.FC = () => {
                 setMemberAwaitingSprint(false);
             }
 
-            const loadedTodos = await fetchTasks(ctx.workspaceId);
+            await ensureWorkspaceProfiles(ctx.workspaceId);
+            const [loadedTodos, loadedProfiles] = await Promise.all([
+                fetchTasks(ctx.workspaceId),
+                fetchWorkspaceProfiles(ctx.workspaceId),
+            ]);
             setSprints(loadedSprints);
             setTodos(loadedTodos);
+            setTeamProfiles(loadedProfiles);
 
             const savedId = localStorage.getItem(currentSprintStorageKey(ctx.workspaceId));
             const validSaved =
@@ -168,7 +167,7 @@ const PlannerPage: React.FC = () => {
         }
     };
 
-    const addTodo = async (text: string, priority: Priority, assigneeId?: number) => {
+    const addTodo = async (text: string, priority: Priority, assigneeUserId?: string) => {
         if (!workspaceId || !currentSprintId) return;
         setActionError(null);
         try {
@@ -177,7 +176,7 @@ const PlannerPage: React.FC = () => {
                 currentSprintId,
                 text,
                 priority,
-                assigneeId
+                assigneeUserId
             );
             setTodos((prev) => [created, ...prev]);
         } catch (e) {
@@ -208,32 +207,19 @@ const PlannerPage: React.FC = () => {
         }
     };
 
-    const addTeamMember = (name: string, role: string) => {
-        const newMember: TeamMember = { id: Date.now(), name, role };
-        setTeamMembers([...teamMembers, newMember]);
-    };
-
-    const editTeamMember = (id: number, name: string, role: string) => {
-        setTeamMembers(
-            teamMembers.map((member) =>
-                member.id === id ? { ...member, name, role } : member
-            )
-        );
-    };
-
-    const deleteTeamMember = async (id: number) => {
-        setTeamMembers(teamMembers.filter((member) => member.id !== id));
-        setTodos((prev) =>
-            prev.map((todo) =>
-                todo.assigneeId === id ? { ...todo, assigneeId: undefined } : todo
-            )
-        );
-        if (workspaceId) {
-            try {
-                await clearAssigneeFromTasks(workspaceId, id);
-            } catch (e) {
-                reportMutationError('Could not clear assignee on tasks', e);
-            }
+    const saveDisplayName = async (userId: string, displayName: string) => {
+        if (!workspaceId) return;
+        setActionError(null);
+        try {
+            await updateWorkspaceDisplayName(workspaceId, userId, displayName);
+            setTeamProfiles((prev) =>
+                prev.map((p) =>
+                    p.userId === userId ? { ...p, displayName } : p
+                )
+            );
+        } catch (e) {
+            reportMutationError('Could not update display name', e);
+            throw e;
         }
     };
 
@@ -267,10 +253,10 @@ const PlannerPage: React.FC = () => {
                 </div>
             )}
             <TeamPanel
-                teamMembers={teamMembers}
-                addTeamMember={addTeamMember}
-                editTeamMember={editTeamMember}
-                deleteTeamMember={deleteTeamMember}
+                profiles={teamProfiles}
+                currentUserId={session?.user?.id ?? null}
+                workspaceRole={workspaceRole}
+                onSaveDisplayName={saveDisplayName}
             />
             <main className="main-content-wrapper">
                 <header className="main-header">
@@ -312,7 +298,7 @@ const PlannerPage: React.FC = () => {
                 <div className="main-content">
                     <AddTodoForm
                         addTodo={addTodo}
-                        teamMembers={teamMembers}
+                        profiles={teamProfiles}
                         disabled={!currentSprintId}
                     />
                     <ul className="todo-list">
@@ -324,7 +310,7 @@ const PlannerPage: React.FC = () => {
                                         todo={todo}
                                         toggleTodo={toggleTodo}
                                         deleteTodo={deleteTodoHandler}
-                                        teamMembers={teamMembers}
+                                        profiles={teamProfiles}
                                     />
                                 ))
                             ) : (

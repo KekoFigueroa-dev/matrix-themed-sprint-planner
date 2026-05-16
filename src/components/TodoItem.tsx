@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { Todo, TeamMember } from '../types';
+import { Todo } from '../types';
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import type { WorkspaceProfile } from '../lib/teamDb';
 
 interface TodoItemProps {
   todo: Todo;
   toggleTodo: (id: string) => void;
   deleteTodo: (id: string) => void;
-  teamMembers: TeamMember[];
+  profiles: WorkspaceProfile[];
 }
 
 const itemVariants = {
@@ -23,9 +24,9 @@ const getInitials = (name: string) => {
     return (names[0][0] + names[names.length - 1][0]).toUpperCase();
 }
 
-const TodoItem: React.FC<TodoItemProps> = ({ todo, toggleTodo, deleteTodo, teamMembers }) => {
+const TodoItem: React.FC<TodoItemProps> = ({ todo, toggleTodo, deleteTodo, profiles }) => {
   const priorityClass = `priority-${todo.priority.toLowerCase()}`;
-  const assignee = teamMembers.find(member => member.id === todo.assigneeId);
+  const assignee = profiles.find((p) => p.userId === todo.assigneeUserId);
 
   return (
     <motion.li 
@@ -34,7 +35,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, toggleTodo, deleteTodo, teamM
       initial="initial"
       animate="animate"
       exit="exit"
-      layout // Animates layout changes when items are added/removed
+      layout
     >
       <button className="toggle-button" onClick={() => toggleTodo(todo.id)}>
          <div className="toggle-button-tick">X</div>
@@ -44,8 +45,8 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, toggleTodo, deleteTodo, teamM
       </span>
       <div className="item-tags">
         {assignee && (
-            <span className="assignee-tag" title={`Assigned to ${assignee.name}`}>
-                {getInitials(assignee.name)}
+            <span className="assignee-tag" title={`Assigned to ${assignee.displayName}`}>
+                {getInitials(assignee.displayName)}
             </span>
         )}
         <span className={`priority-tag ${priorityClass}`}>
