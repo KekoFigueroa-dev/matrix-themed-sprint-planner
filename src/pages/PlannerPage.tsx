@@ -16,6 +16,7 @@ const PlannerPage: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [currentSprintId, setCurrentSprintId] = useState<number | null>(null);
+    const [storageReady, setStorageReady] = useState(false);
 
     useEffect(() => {
         getSupabase()
@@ -52,29 +53,33 @@ const PlannerPage: React.FC = () => {
             const savedCurrentSprintId = localStorage.getItem('currentSprintId');
             setCurrentSprintId(savedCurrentSprintId ? JSON.parse(savedCurrentSprintId) : allSprints[0].id);
         }
+
+        setStorageReady(true);
     }, []);
 
     useEffect(() => {
+        if (!storageReady) return;
         if (sprints.length > 0) {
             localStorage.setItem('sprints', JSON.stringify(sprints));
         } else {
-             localStorage.removeItem('sprints');
+            localStorage.removeItem('sprints');
         }
-    }, [sprints]);
+    }, [sprints, storageReady]);
 
     useEffect(() => {
+        if (!storageReady) return;
         localStorage.setItem('todos', JSON.stringify(todos));
-    }, [todos]);
+    }, [todos, storageReady]);
 
     useEffect(() => {
+        if (!storageReady) return;
         localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
-    }, [teamMembers]);
+    }, [teamMembers, storageReady]);
 
     useEffect(() => {
-        if (currentSprintId) {
-            localStorage.setItem('currentSprintId', JSON.stringify(currentSprintId));
-        }
-    }, [currentSprintId]);
+        if (!storageReady || !currentSprintId) return;
+        localStorage.setItem('currentSprintId', JSON.stringify(currentSprintId));
+    }, [currentSprintId, storageReady]);
 
     const addSprint = (name: string) => {
         const newSprint = { id: Date.now(), name };

@@ -8,6 +8,9 @@ import InvitesPage from './pages/InvitesPage';
 import RegisterPage from './pages/RegisterPage';
 import { getSupabase, isSupabaseConfigured } from './lib/supabaseClient';
 
+/** Unblock UI if auth listener never fires (broken storage, etc.). */
+const AUTH_READY_FALLBACK_MS = 8_000;
+
 const SessionRoutes: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [ready, setReady] = useState(false);
@@ -25,33 +28,46 @@ const SessionRoutes: React.FC = () => {
 
     useEffect(() => {
         let cancelled = false;
+        let authReady = false;
         const supabase = getSupabase();
 
-        const init = async () => {
-            const { data: { session: initial } } = await supabase.auth.getSession();
-            if (cancelled) return;
-            setSession(initial);
-            if (initial?.user) {
-                await runEnsureWorkspace();
+        const markReady = () => {
+            if (!cancelled && !authReady) {
+                authReady = true;
+                setReady(true);
             }
-            if (!cancelled) setReady(true);
         };
 
-        void init();
+        const applySession = (nextSession: Session | null) => {
+            if (!cancelled) setSession(nextSession);
+        };
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (_event, nextSession) => {
-                setSession(nextSession);
+            (_event, nextSession) => {
+                applySession(nextSession);
+                markReady();
                 if (nextSession?.user) {
-                    await runEnsureWorkspace();
+                    void runEnsureWorkspace();
                 } else {
                     setWorkspaceBootstrapError(null);
                 }
             }
         );
 
+        void supabase.auth.getSession().then(({ data: { session: initial }, error }) => {
+            if (cancelled) return;
+            if (error) {
+                console.error('getSession:', error.message);
+            }
+            applySession(initial);
+            markReady();
+        });
+
+        const fallbackTimer = window.setTimeout(markReady, AUTH_READY_FALLBACK_MS);
+
         return () => {
             cancelled = true;
+            window.clearTimeout(fallbackTimer);
             subscription.unsubscribe();
         };
     }, [runEnsureWorkspace]);
