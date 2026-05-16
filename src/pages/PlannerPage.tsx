@@ -28,6 +28,7 @@ import {
     updateWorkspaceDisplayName,
     type WorkspaceProfile,
 } from '../lib/teamDb';
+import { Badge, Button, Card, InlineAlert } from '../ui';
 
 function currentSprintStorageKey(workspaceId: string): string {
     return `planner:currentSprintId:${workspaceId}`;
@@ -234,75 +235,81 @@ const PlannerPage: React.FC = () => {
 
     if (plannerLoading) {
         return (
-            <div className="auth-page">
-                <p className="auth-info">Loading planner…</p>
-            </div>
+            <motion.div className="planner-loading" role="status" aria-live="polite">
+                <div className="planner-skeleton" aria-hidden />
+                <div className="planner-skeleton" style={{ width: '200px' }} aria-hidden />
+                <p className="planner-loading__label">Loading planner…</p>
+            </motion.div>
         );
     }
 
     return (
-        <div className="sprint-planner-layout">
+        <div className="planner-page">
             {plannerError && (
-                <div className="bootstrap-error-banner" role="alert">
-                    <span>
+                <div className="planner-banner">
+                    <InlineAlert variant="error">
                         <strong>Planner:</strong> {plannerError}
-                    </span>
-                    <button type="button" className="bootstrap-error-retry" onClick={() => loadPlanner()}>
+                    </InlineAlert>
+                    <Button type="button" variant="secondary" onClick={() => loadPlanner()}>
                         Retry
-                    </button>
+                    </Button>
                 </div>
             )}
-            <TeamPanel
-                profiles={teamProfiles}
-                currentUserId={session?.user?.id ?? null}
-                workspaceRole={workspaceRole}
-                onSaveDisplayName={saveDisplayName}
-            />
-            <main className="main-content-wrapper">
-                <header className="main-header">
-                    <div className="session-bar">
-                        <span className="session-email">{session?.user?.email ?? ''}</span>
-                        {workspaceRole && (
-                            <span className={`session-role-badge session-role-${workspaceRole}`}>
-                                {workspaceRole}
-                            </span>
-                        )}
-                        <Link to="/invites" className="nav-link-invites">
+            <aside className="planner-sidebar">
+                <Card className="planner-card">
+                    <TeamPanel
+                        profiles={teamProfiles}
+                        currentUserId={session?.user?.id ?? null}
+                        workspaceRole={workspaceRole}
+                        onSaveDisplayName={saveDisplayName}
+                    />
+                </Card>
+            </aside>
+            <main className="planner-main">
+                <header className="planner-main__header">
+                    <div className="planner-topbar">
+                        <span className="planner-topbar__email">{session?.user?.email ?? ''}</span>
+                        {workspaceRole && <Badge role={workspaceRole} />}
+                        <Link to="/invites" className="planner-link">
                             Invites
                         </Link>
-                        <button type="button" className="sign-out-button" onClick={handleSignOut}>
+                        <Button type="button" variant="ghost" onClick={handleSignOut}>
                             Sign out
-                        </button>
+                        </Button>
                     </div>
-                    <h1>Sprint Planner</h1>
+                    <h1 className="planner-title">Sprint planner</h1>
                     {actionError && (
-                        <p className="planner-action-error" role="alert">
-                            {actionError}
-                        </p>
+                        <InlineAlert variant="error">{actionError}</InlineAlert>
                     )}
                     {memberAwaitingSprint && (
-                        <p className="planner-member-empty" role="status">
+                        <InlineAlert variant="info">
                             No sprints in this workspace yet. Ask a workspace admin to create one.
-                        </p>
+                        </InlineAlert>
                     )}
-                    <SprintManager
-                        sprints={sprints}
-                        currentSprintId={currentSprintId}
-                        canManageSprints={isAdmin}
-                        onSprintChange={setCurrentSprintId}
-                        onAddSprint={addSprint}
-                        onRenameSprint={renameSprint}
-                        onDeleteSprint={deleteSprint}
-                    />
+                    <Card className="planner-card planner-sprint">
+                        <h2 className="planner-card__heading">Sprint</h2>
+                        <SprintManager
+                            sprints={sprints}
+                            currentSprintId={currentSprintId}
+                            canManageSprints={isAdmin}
+                            onSprintChange={setCurrentSprintId}
+                            onAddSprint={addSprint}
+                            onRenameSprint={renameSprint}
+                            onDeleteSprint={deleteSprint}
+                        />
+                    </Card>
                 </header>
-                <div className="main-content">
-                    <AddTodoForm
-                        addTodo={addTodo}
-                        profiles={teamProfiles}
-                        disabled={!currentSprintId}
-                    />
-                    <ul className="todo-list">
-                        <AnimatePresence>
+                <div className="planner-main__body">
+                    <Card className="planner-card">
+                        <h2 className="planner-card__heading">Add task</h2>
+                        <AddTodoForm
+                            addTodo={addTodo}
+                            profiles={teamProfiles}
+                            disabled={!currentSprintId}
+                        />
+                    </Card>
+                    <ul className="planner-todo-list">
+                        <AnimatePresence mode="popLayout">
                             {filteredTodos.length > 0 ? (
                                 filteredTodos.map((todo) => (
                                     <TodoItem
@@ -314,25 +321,29 @@ const PlannerPage: React.FC = () => {
                                     />
                                 ))
                             ) : (
-                                <motion.p
+                                <motion.li
                                     key="empty"
-                                    initial={{ opacity: 0, y: -10 }}
+                                    initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 10 }}
-                                    className="empty-state"
+                                    exit={{ opacity: 0 }}
+                                    className="planner-empty"
                                 >
                                     {sprints.length > 0
-                                        ? 'This sprint is empty. Add a task!'
+                                        ? 'This sprint is empty. Add a task above.'
                                         : isAdmin
                                           ? 'Create a sprint to get started.'
                                           : 'Waiting for an admin to create a sprint.'}
-                                </motion.p>
+                                </motion.li>
                             )}
                         </AnimatePresence>
                     </ul>
                 </div>
             </main>
-            <StatsPanel todos={filteredTodos} />
+            <footer className="planner-stats">
+                <Card className="planner-card">
+                    <StatsPanel todos={filteredTodos} />
+                </Card>
+            </footer>
         </div>
     );
 };
