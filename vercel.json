@@ -1,0 +1,6 @@
+{
+  "installCommand": "rm -rf node_modules && npm ci",
+  "buildCommand": "CI=true node node_modules/react-scripts/bin/react-scripts.js build",
+  "outputDirectory": "build",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
