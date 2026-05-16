@@ -19,7 +19,7 @@ Web-based sprint planning and tasks for small teams. **V2** targets portfolio-gr
 - **Stack:** React 18, TypeScript, **Create React App** (`react-scripts`), Framer Motion, Lucide, **React Router**, `@supabase/supabase-js`.
 - **Auth:** Email/password via Supabase (`/login`, `/register`); planner requires session; **`ensure_workspace_for_user`** RPC after login (Phase 2 — apply SQL migration + `.env.local`).
 - **Invites:** **`/invites`** page; run migration **`20250516180000_accept_workspace_invite.sql`** for **`accept_workspace_invite`** RPC (Phase 3).
-- **Planner data:** Still **localStorage** (Supabase-backed tasks/sprints come in a later slice).
+- **Planner data:** **Sprints + tasks** → Supabase (`sprints`, `tasks`, workspace-scoped); **team panel** still **localStorage** until a later slice.
 - **V2 target stack:** **Next.js** + Supabase — see [docs/v2.md](./docs/v2.md#current-repository-state-vs-v2-read-this-first).
 
 ### Phase 2 — Try auth + workspace locally
