@@ -150,7 +150,7 @@ Browser (CRA + React Router) ──► Supabase Auth (JWT)
 
 ## Deployment (Vercel)
 
-**Live demo:** add your production URL here after deploy (e.g. `https://matrix-themed-sprint-planner.vercel.app`).
+**Live demo:** https://matrix-themed-sprint-planner.vercel.app
 
 [`vercel.json`](./vercel.json) runs a fresh `npm ci` and builds CRA via `node` (fixes Vercel **exit 126**). SPA rewrites support React Router.
 
