@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
+import { Button, Card, InlineAlert, Input } from '../ui';
 
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
@@ -30,38 +31,40 @@ const LoginPage: React.FC = () => {
 
     return (
         <div className="auth-page">
-            <form className="auth-form" onSubmit={handleSubmit}>
-                <h1 className="auth-title">Sign in</h1>
-                {error && <p className="auth-error" role="alert">{error}</p>}
-                <label className="auth-label">
-                    Email
-                    <input
-                        className="auth-input"
+            <Card title="Sign in" className="auth-card">
+                <p className="auth-card__subtitle">Sprint planning for small teams</p>
+                <div className="auth-card__chip-row">
+                    <span className="code-label">Supabase Auth</span>
+                    <span className="code-label">Workspace RLS</span>
+                </div>
+                {error && <InlineAlert variant="error">{error}</InlineAlert>}
+                <form onSubmit={handleSubmit}>
+                    <Input
+                        label="Email"
                         type="email"
                         autoComplete="email"
                         value={email}
                         onChange={(ev) => setEmail(ev.target.value)}
                         required
+                        disabled={loading}
                     />
-                </label>
-                <label className="auth-label">
-                    Password
-                    <input
-                        className="auth-input"
+                    <Input
+                        label="Password"
                         type="password"
                         autoComplete="current-password"
                         value={password}
                         onChange={(ev) => setPassword(ev.target.value)}
                         required
+                        disabled={loading}
                     />
-                </label>
-                <button type="submit" className="auth-submit" disabled={loading}>
-                    {loading ? 'Signing in…' : 'Sign in'}
-                </button>
+                    <Button type="submit" fullWidth loading={loading}>
+                        {loading ? 'Signing in…' : 'Sign in'}
+                    </Button>
+                </form>
                 <p className="auth-footer">
                     No account? <Link to="/register">Register</Link>
                 </p>
-            </form>
+            </Card>
         </div>
     );
 };
