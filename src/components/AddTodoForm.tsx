@@ -5,9 +5,10 @@ import { Priority, TeamMember } from '../types';
 interface AddTodoFormProps {
   addTodo: (text: string, priority: Priority, assigneeId?: number) => void;
   teamMembers: TeamMember[];
+  disabled?: boolean;
 }
 
-const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, teamMembers }) => {
+const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, teamMembers, disabled = false }) => {
   const [text, setText] = useState('');
   const [priority, setPriority] = useState<Priority>('Medium');
   const [assigneeId, setAssigneeId] = useState<string>('');
@@ -29,12 +30,14 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, teamMembers }) => {
         className="add-todo-input"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="What needs to be done?"
+        placeholder={disabled ? 'Select a sprint first' : 'What needs to be done?'}
+        disabled={disabled}
       />
       <select 
         className="priority-select" 
         value={priority} 
         onChange={(e) => setPriority(e.target.value as Priority)}
+        disabled={disabled}
       >
         <option value="Low">Low</option>
         <option value="Medium">Medium</option>
@@ -44,6 +47,7 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, teamMembers }) => {
         className="assignee-select"
         value={assigneeId}
         onChange={(e) => setAssigneeId(e.target.value)}
+        disabled={disabled}
       >
         <option value="">Unassigned</option>
         {teamMembers.map(member => (
@@ -52,7 +56,7 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, teamMembers }) => {
             </option>
         ))}
       </select>
-      <button type="submit" className="add-todo-button">Add</button>
+      <button type="submit" className="add-todo-button" disabled={disabled}>Add</button>
     </form>
   );
 };

@@ -6,6 +6,7 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 interface SprintManagerProps {
   sprints: Sprint[];
   currentSprintId: string | null;
+  canManageSprints: boolean;
   onSprintChange: (id: string) => void;
   onAddSprint: (name: string) => void;
   onRenameSprint: (id: string, newName: string) => void;
@@ -15,6 +16,7 @@ interface SprintManagerProps {
 const SprintManager: React.FC<SprintManagerProps> = ({
   sprints,
   currentSprintId,
+  canManageSprints,
   onSprintChange,
   onAddSprint,
   onRenameSprint,
@@ -83,13 +85,17 @@ const SprintManager: React.FC<SprintManagerProps> = ({
             </option>
           ))}
         </select>
-        <div className="sprint-actions">
-          <button type="button" onClick={handleStartAdd} title="Add New Sprint"><Plus size={16} /> Add Sprint</button>
-          <button type="button" onClick={handleStartRename} disabled={!currentSprintId} title="Rename Current Sprint"><Edit2 size={16} /> Rename</button>
-          <button type="button" onClick={handleDelete} disabled={sprints.length <= 1 || !currentSprintId} className="delete-action" title="Delete Current Sprint"><Trash2 size={16} /> Delete</button>
-        </div>
+        {canManageSprints ? (
+          <div className="sprint-actions">
+            <button type="button" onClick={handleStartAdd} title="Add New Sprint"><Plus size={16} /> Add Sprint</button>
+            <button type="button" onClick={handleStartRename} disabled={!currentSprintId} title="Rename Current Sprint"><Edit2 size={16} /> Rename</button>
+            <button type="button" onClick={handleDelete} disabled={sprints.length <= 1 || !currentSprintId} className="delete-action" title="Delete Current Sprint"><Trash2 size={16} /> Delete</button>
+          </div>
+        ) : (
+          <p className="sprint-member-hint">Member — switch sprint to work on tasks. Ask an admin to create sprints.</p>
+        )}
       </div>
-      {(adding || renaming) && (
+      {canManageSprints && (adding || renaming) && (
         <form className="sprint-inline-form" onSubmit={handleSubmit}>
           <input
             type="text"

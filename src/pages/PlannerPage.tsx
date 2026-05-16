@@ -9,7 +9,8 @@ import SprintManager from '../components/SprintManager';
 import StatsPanel from '../components/StatsPanel';
 import { Link } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
-import { fetchActiveWorkspaceId } from '../lib/workspace';
+import { fetchActiveWorkspaceContext, type WorkspaceRole } from '../lib/workspace';
+import { errorMessageFromUnknown } from '../lib/supabaseErrors';
 import {
     clearAssigneeFromTasks,
     createSprint,
@@ -29,8 +30,13 @@ function currentSprintStorageKey(workspaceId: string): string {
 const PlannerPage: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+    const [workspaceRole, setWorkspaceRole] = useState<WorkspaceRole | null>(null);
     const [plannerLoading, setPlannerLoading] = useState(true);
     const [plannerError, setPlannerError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [memberAwaitingSprint, setMemberAwaitingSprint] = useState(false);
+
+    const isAdmin = workspaceRole === 'admin';
 
     const [sprints, setSprints] = useState<Sprint[]>([]);
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -59,33 +65,43 @@ const PlannerPage: React.FC = () => {
         setPlannerLoading(true);
         setPlannerError(null);
         try {
-            const wsId = await fetchActiveWorkspaceId();
-            if (!wsId) {
+            const ctx = await fetchActiveWorkspaceContext();
+            if (!ctx) {
                 setPlannerError('No workspace found. Sign out and sign in again to bootstrap your workspace.');
                 setWorkspaceId(null);
+                setWorkspaceRole(null);
                 setSprints([]);
                 setTodos([]);
                 setCurrentSprintId(null);
+                setMemberAwaitingSprint(false);
                 return;
             }
-            setWorkspaceId(wsId);
+            setWorkspaceId(ctx.workspaceId);
+            setWorkspaceRole(ctx.role);
 
-            let loadedSprints = await fetchSprints(wsId);
+            let loadedSprints = await fetchSprints(ctx.workspaceId);
             if (loadedSprints.length === 0) {
-                const first = await createSprint(wsId, 'Sprint 1');
-                loadedSprints = [first];
+                if (ctx.role === 'admin') {
+                    const first = await createSprint(ctx.workspaceId, 'Sprint 1');
+                    loadedSprints = [first];
+                    setMemberAwaitingSprint(false);
+                } else {
+                    setMemberAwaitingSprint(true);
+                }
+            } else {
+                setMemberAwaitingSprint(false);
             }
 
-            const loadedTodos = await fetchTasks(wsId);
+            const loadedTodos = await fetchTasks(ctx.workspaceId);
             setSprints(loadedSprints);
             setTodos(loadedTodos);
 
-            const savedId = localStorage.getItem(currentSprintStorageKey(wsId));
+            const savedId = localStorage.getItem(currentSprintStorageKey(ctx.workspaceId));
             const validSaved =
                 savedId && loadedSprints.some((s) => s.id === savedId) ? savedId : null;
             setCurrentSprintId(validSaved ?? loadedSprints[0]?.id ?? null);
         } catch (e) {
-            const msg = e instanceof Error ? e.message : 'Failed to load planner data.';
+            const msg = errorMessageFromUnknown(e);
             setPlannerError(msg);
             console.error('loadPlanner:', e);
         } finally {
@@ -103,13 +119,14 @@ const PlannerPage: React.FC = () => {
     }, [workspaceId, currentSprintId]);
 
     const reportMutationError = (label: string, e: unknown) => {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = errorMessageFromUnknown(e);
         console.error(label, e);
-        alert(`${label}: ${msg}`);
+        setActionError(`${label}: ${msg}`);
     };
 
     const addSprint = async (name: string) => {
-        if (!workspaceId) return;
+        if (!workspaceId || !isAdmin) return;
+        setActionError(null);
         try {
             const created = await createSprint(workspaceId, name);
             setSprints((prev) => [...prev, created]);
@@ -120,6 +137,8 @@ const PlannerPage: React.FC = () => {
     };
 
     const renameSprint = async (id: string, newName: string) => {
+        if (!isAdmin) return;
+        setActionError(null);
         try {
             await updateSprintName(id, newName);
             setSprints((prev) => prev.map((s) => (s.id === id ? { ...s, name: newName } : s)));
@@ -129,7 +148,8 @@ const PlannerPage: React.FC = () => {
     };
 
     const deleteSprint = async (id: string) => {
-        if (!workspaceId) return;
+        if (!workspaceId || !isAdmin) return;
+        setActionError(null);
         if (sprints.length <= 1) {
             alert('Cannot delete the last sprint.');
             return;
@@ -149,6 +169,7 @@ const PlannerPage: React.FC = () => {
 
     const addTodo = async (text: string, priority: Priority, assigneeId?: number) => {
         if (!workspaceId || !currentSprintId) return;
+        setActionError(null);
         try {
             const created = await createTask(
                 workspaceId,
@@ -251,6 +272,11 @@ const PlannerPage: React.FC = () => {
                 <header className="main-header">
                     <div className="session-bar">
                         <span className="session-email">{session?.user?.email ?? ''}</span>
+                        {workspaceRole && (
+                            <span className={`session-role-badge session-role-${workspaceRole}`}>
+                                {workspaceRole}
+                            </span>
+                        )}
                         <Link to="/invites" className="nav-link-invites">
                             Invites
                         </Link>
@@ -259,9 +285,20 @@ const PlannerPage: React.FC = () => {
                         </button>
                     </div>
                     <h1>Sprint Planner</h1>
+                    {actionError && (
+                        <p className="planner-action-error" role="alert">
+                            {actionError}
+                        </p>
+                    )}
+                    {memberAwaitingSprint && (
+                        <p className="planner-member-empty" role="status">
+                            No sprints in this workspace yet. Ask a workspace admin to create one.
+                        </p>
+                    )}
                     <SprintManager
                         sprints={sprints}
                         currentSprintId={currentSprintId}
+                        canManageSprints={isAdmin}
                         onSprintChange={setCurrentSprintId}
                         onAddSprint={addSprint}
                         onRenameSprint={renameSprint}
@@ -269,7 +306,11 @@ const PlannerPage: React.FC = () => {
                     />
                 </header>
                 <div className="main-content">
-                    <AddTodoForm addTodo={addTodo} teamMembers={teamMembers} />
+                    <AddTodoForm
+                        addTodo={addTodo}
+                        teamMembers={teamMembers}
+                        disabled={!currentSprintId}
+                    />
                     <ul className="todo-list">
                         <AnimatePresence>
                             {filteredTodos.length > 0 ? (
@@ -292,7 +333,9 @@ const PlannerPage: React.FC = () => {
                                 >
                                     {sprints.length > 0
                                         ? 'This sprint is empty. Add a task!'
-                                        : 'Create a sprint to get started.'}
+                                        : isAdmin
+                                          ? 'Create a sprint to get started.'
+                                          : 'Waiting for an admin to create a sprint.'}
                                 </motion.p>
                             )}
                         </AnimatePresence>
