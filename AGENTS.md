@@ -103,8 +103,8 @@ WORK PLAN (update progress table in docs/v2.md when done):
 Phase 0–1: Done (schema + RLS)
 Phase 2–3: Done (auth, workspace, invites)
 Planner slice: Done (sprints/tasks in Supabase; team panel still localStorage)
-Phase 4: NEXT — role-based UI (hide admin actions for members) + polish
-Phase 5: Vercel deploy + live smoke test
+Phase 4: Done (role-based UI, member sprint gating)
+Phase 5: NEXT — Vercel deploy + live smoke test
 Optional later: Next.js migration; wire projects table; remove node_modules from git history
 
 OUTPUT:

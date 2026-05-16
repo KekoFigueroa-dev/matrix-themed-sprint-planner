@@ -23,7 +23,8 @@ Web-based sprint planning and tasks for small teams. **V2** targets portfolio-gr
 | **Workspace** | Auto-created on first sign-in; rows in `workspaces` + `workspace_members` |
 | **Invites** | `/invites` — admin invite/revoke; invitee signs in with **invited email** and **Accept** (no invite email sent by the app) |
 | **Planner** | **Sprints + tasks** → Supabase (`sprints`, `tasks`, workspace-scoped). **Team panel** → `localStorage` only |
-| **Not in UI yet** | `projects` table; `doing` task status; role-based UI hiding (Phase 4); Vercel deploy (Phase 5) |
+| **Permissions** | Role badge; members manage tasks only; admins manage sprints (Phase 4) |
+| **Not in UI yet** | `projects` table; `doing` task status; Vercel deploy (Phase 5) |
 | **V2 framework target** | Next.js App Router — see [docs/v2.md](./docs/v2.md) |
 
 ---
