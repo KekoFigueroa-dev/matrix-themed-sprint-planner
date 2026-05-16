@@ -6,106 +6,50 @@ Web-based sprint planning and tasks for small teams. **V2** targets portfolio-gr
 
 | Doc | Purpose |
 |-----|--------|
-| **[docs/v2.md](./docs/v2.md)** | Full V2 spec: **progress tracker**, phases 0–5, entities, permission matrix, flows, out-of-scope, Supabase click-steps summary, time estimates |
+| **[docs/v2.md](./docs/v2.md)** | Full V2 spec: **progress tracker**, phases 0–5, entities, permission matrix, flows, maintainer test plans |
 | **[docs/rls.md](./docs/rls.md)** | RLS policy model, RPC patterns, testing checklist |
 | **[AGENTS.md](./AGENTS.md)** | Agent rules, handoff habits, **Cursor bootstrap prompt** |
 
-**Agents and contributors:** read [docs/v2.md](./docs/v2.md) first, then update its **Progress tracker** when you stop or ship work.
+**Agents and contributors:** read [docs/v2.md](./docs/v2.md) first, then update its **Progress tracker** when you ship work.
 
 ---
 
-## Current app (main branch)
+## Current app (`main`)
 
-- **Stack:** React 18, TypeScript, **Create React App** (`react-scripts`), Framer Motion, Lucide, **React Router**, `@supabase/supabase-js`.
-- **Auth:** Email/password via Supabase (`/login`, `/register`); planner requires session; **`ensure_workspace_for_user`** RPC after login (Phase 2 — apply SQL migration + `.env.local`).
-- **Invites:** **`/invites`** page; run migration **`20250516180000_accept_workspace_invite.sql`** for **`accept_workspace_invite`** RPC (Phase 3).
-- **Planner data:** **Sprints + tasks** → Supabase (`sprints`, `tasks`, workspace-scoped); **team panel** still **localStorage** until a later slice.
-- **V2 target stack:** **Next.js** + Supabase — see [docs/v2.md](./docs/v2.md#current-repository-state-vs-v2-read-this-first).
-
-### Phase 2 — Try auth + workspace locally
-
-1. Supabase → **SQL Editor** → run `supabase/migrations/20250515120000_ensure_workspace_for_user.sql`.
-2. Supabase → **Authentication** → enable **Email**; **URL Configuration** → Site URL `http://localhost:3000`, redirect `http://localhost:3000/**`. Turn off email confirmation for quick tests if you prefer.
-3. Copy [`.env.example`](./.env.example) to **`.env.local`** with `REACT_APP_SUPABASE_URL` and either `REACT_APP_SUPABASE_ANON_KEY` or `REACT_APP_SUPABASE_PUBLISHABLE_KEY`.
-4. `npm install` → `npm start` → register or sign in → confirm rows in **`workspaces`** and **`workspace_members`** for your user.
-
-Full checklist: [docs/v2.md § Phase 2 — Maintainer test plan](./docs/v2.md#phase-2--maintainer-test-plan).
-
-### Phase 3 — Invites + accept
-
-1. Supabase → **SQL Editor** → run `supabase/migrations/20250516180000_accept_workspace_invite.sql`.
-2. Two browser profiles or incognito: admin invites collaborator email; collaborator accepts at **`/invites`**.
-
-Detail: [docs/v2.md § Phase 3 — Maintainer test plan](./docs/v2.md#phase-3--maintainer-test-plan).
-
-### Planner → Supabase (sprints + tasks)
-
-1. Run `supabase/migrations/20250517120000_tasks_planner_fields.sql` in **SQL Editor** (adds `priority`, `assignee_member_id` on `tasks`).
-2. Sign in → create sprint/task → confirm rows in **`sprints`** and **`tasks`** for your workspace.
-3. Hard refresh → data reloads from Supabase (same browser + origin). Team panel stays in **localStorage**.
+| Area | Status |
+|------|--------|
+| **Stack** | React 18, TypeScript, **CRA** (`react-scripts`), Framer Motion, Lucide, **React Router**, `@supabase/supabase-js` |
+| **Auth** | `/login`, `/register`; protected `/`; session persists on refresh; **`ensure_workspace_for_user`** RPC |
+| **Workspace** | Auto-created on first sign-in; rows in `workspaces` + `workspace_members` |
+| **Invites** | `/invites` — admin invite/revoke; invitee **Accept** via `accept_workspace_invite` RPC |
+| **Planner** | **Sprints + tasks** → Supabase (`sprints`, `tasks`, workspace-scoped). **Team panel** → `localStorage` only |
+| **Not in UI yet** | `projects` table; `doing` task status; role-based UI hiding (Phase 4); Vercel deploy (Phase 5) |
+| **V2 framework target** | Next.js App Router — see [docs/v2.md](./docs/v2.md) |
 
 ---
 
 ## Features (today)
 
-- Sprint CRUD and switcher; tasks with priority and assignee; team sidebar; stats strip; retro terminal styling.
+- Sprint CRUD and switcher (stored in **Supabase**)
+- Tasks with priority, complete toggle, assignee tags (tasks in **Supabase**; assignee links to local team list)
+- Team sidebar (local names/roles for display)
+- Stats strip; retro terminal styling
+- Multi-user workspace + email invites
 
 ---
 
-## Project structure
-
-```text
-docs/
-  ├── v2.md          # V2 spec + progress tracker + maintainer test plans
-  └── rls.md         # RLS model (+ link to migration SQL)
-supabase/
-  └── migrations/
-      ├── 20250514130000_initial_schema_workspaces_rls.sql
-      ├── 20250515120000_ensure_workspace_for_user.sql
-      ├── 20250516180000_accept_workspace_invite.sql
-      └── 20250517120000_tasks_planner_fields.sql
-public/
-  └── index.html
-src/
-  ├── App.tsx
-  ├── env.ts
-  ├── index.tsx
-  ├── lib/
-  │   └── supabaseClient.ts
-  ├── pages/
-  │   ├── ConfigMissingPage.tsx
-  │   ├── InvitesPage.tsx
-  │   ├── LoginPage.tsx
-  │   ├── PlannerPage.tsx
-  │   └── RegisterPage.tsx
-  ├── styles.css
-  ├── types.ts
-  └── components/
-      ├── AddTodoForm.tsx
-      ├── TodoItem.tsx
-      ├── TeamPanel.tsx
-      ├── StatsPanel.tsx
-      └── SprintManager.tsx
-AGENTS.md
-README.md
-.env.example
-package.json
-tsconfig.json
-```
-
----
-
-## Local setup (CRA — until Next migration)
+## Local setup
 
 ```bash
 git clone https://github.com/KekoFigueroa-dev/matrix-themed-sprint-planner.git
 cd matrix-themed-sprint-planner
 npm install
+cp .env.example .env.local   # then fill in Supabase URL + key
 npm start
 ```
 
-- Dev server: [http://localhost:3000](http://localhost:3000)  
-- Production bundle: `npm run build` → output in `build/`
+- Dev server: [http://localhost:3000](http://localhost:3000) — use **one origin** consistently (`localhost` vs `127.0.0.1` have separate storage).
+- Production bundle: `npm run build` → `build/`
 
 On Windows PowerShell, if execution policy blocks scripts:
 
@@ -113,69 +57,98 @@ On Windows PowerShell, if execution policy blocks scripts:
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
-**Note:** If `git status` shows massive `node_modules` changes, this repo may have historically tracked `node_modules`. Run `git restore node_modules` before committing; long-term, remove `node_modules` from git in a dedicated PR. See [AGENTS.md](./AGENTS.md).
+**Repository hygiene:** Do not commit `node_modules`. If `git status` shows noise under `node_modules/`, run `git restore node_modules` before committing.
 
 ---
 
-## Environment variables
+## Environment variables (CRA)
 
-### Next.js (V2 target — use after migration)
+Create **`.env.local`** next to `package.json` (never commit secrets). Restart `npm start` after changes.
 
-Create `.env.local` (never commit secrets):
+| Variable | Required |
+|----------|----------|
+| `REACT_APP_SUPABASE_URL` | Yes — Dashboard → Project Settings → API → Project URL |
+| `REACT_APP_SUPABASE_ANON_KEY` | Yes — **or** `REACT_APP_SUPABASE_PUBLISHABLE_KEY` |
 
-| Variable | Where |
-|----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Project Settings → API → Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same → `anon` `public` key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Same → `service_role` key — **server-only** (Route Handlers / server actions). **Never** expose to the browser. |
+See [`.env.example`](./.env.example).
 
-On **Vercel:** Project → Settings → Environment Variables — add the same names for Production / Preview as needed.
-
-### Create React App (interim)
-
-If Supabase is wired before Next migration, CRA expects:
-
-- `REACT_APP_SUPABASE_URL`
-- `REACT_APP_SUPABASE_ANON_KEY`
-
-Prefer migrating to Next and standardizing on `NEXT_PUBLIC_*` per [docs/v2.md](./docs/v2.md).
+**Next.js (future):** `NEXT_PUBLIC_SUPABASE_*` — documented in [docs/v2.md](./docs/v2.md) when migration lands.
 
 ---
 
-## Supabase dashboard (short checklist)
+## Supabase migrations (apply in order)
 
-1. Create project → enable **Email** provider.  
-2. **Authentication → URL configuration:** set Site URL and Redirect URLs for `http://localhost:3000` and `https://YOUR_VERCEL_DOMAIN` (and `/**` or `/auth/callback` as you implement).  
-3. Run SQL migrations from the repo (`supabase/migrations/`). Open **`20250514130000_initial_schema_workspaces_rls.sql`**, copy into SQL Editor, run once.  
-4. Confirm RLS is enabled on all tenant tables.
+Run each file once in **SQL Editor** (or `supabase db push` if CLI is linked):
 
-**After applying:** follow **Phase 1: Maintainer test plan** in [docs/v2.md](./docs/v2.md#phase-1-maintainer-test-plan-after-applying-sql).
+| Order | File | Purpose |
+|-------|------|---------|
+| 1 | `supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql` | Tables + RLS |
+| 2 | `supabase/migrations/20250515120000_ensure_workspace_for_user.sql` | Bootstrap workspace RPC |
+| 3 | `supabase/migrations/20250516180000_accept_workspace_invite.sql` | Accept invite RPC |
+| 4 | `supabase/migrations/20250517120000_tasks_planner_fields.sql` | `priority`, `assignee_member_id` on `tasks` |
 
-Details and click-flow narrative: [docs/v2.md § Supabase dashboard](./docs/v2.md#supabase-dashboard--click-path-summary).
+**Dashboard checklist**
+
+1. Create project → **Authentication → Providers:** enable **Email**.
+2. **Authentication → URL configuration:** Site URL `http://localhost:3000`; redirect `http://localhost:3000/**` (add production URL when deploying).
+3. Run migrations above.
+4. Confirm **RLS enabled** on all tables.
+
+Maintainer test plans: [docs/v2.md](./docs/v2.md) (Phases 1–3, Planner slice).
 
 ---
 
-## Architecture (V2 target)
+## Quick smoke test (local)
+
+1. Register or sign in → planner loads.
+2. Hard refresh → still signed in, still on planner.
+3. Create sprint + task → rows appear in Supabase **`sprints`** / **`tasks`**.
+4. Optional: `/invites` flow with two accounts.
+
+---
+
+## Project structure
 
 ```text
-Browser (Next.js) ──► Supabase Auth (JWT)
-                   ──► Supabase PostgREST ──► Postgres + RLS
+docs/
+  ├── v2.md
+  └── rls.md
+supabase/migrations/     # SQL — apply in order (see table above)
+src/
+  ├── App.tsx            # Auth gate + routes
+  ├── lib/
+  │   ├── supabaseClient.ts
+  │   ├── workspace.ts   # Active workspace_id for current user
+  │   └── plannerDb.ts   # Sprints/tasks CRUD
+  ├── pages/
+  │   ├── PlannerPage.tsx
+  │   ├── LoginPage.tsx
+  │   ├── RegisterPage.tsx
+  │   ├── InvitesPage.tsx
+  │   └── ConfigMissingPage.tsx
+  └── components/        # SprintManager, TodoItem, TeamPanel, …
+AGENTS.md
+README.md
+.env.example
 ```
-
-- **Auth:** Email/password; session available to the client via Supabase JS.  
-- **Data:** Tables in [docs/v2.md](./docs/v2.md#table-sketches-postgres); access enforced by **RLS**.  
-- **Bootstrap / invite edge cases:** Prefer **`SECURITY DEFINER` RPC** (e.g. `ensure_workspace_for_user`, `accept_workspace_invite`) so policies stay tight — see [docs/rls.md](./docs/rls.md).
-
-**Schema summary:** `workspaces`, `workspace_members`, `invites`, `projects`, `sprints`, `tasks` — full field list and relationships in [docs/v2.md](./docs/v2.md#entities-and-relationships).
 
 ---
 
-## Deployment (Vercel)
+## Architecture
 
-1. Connect the GitHub repo to Vercel; framework **Next.js** once the app is migrated.  
-2. Set `NEXT_PUBLIC_SUPABASE_*` (and server-only `SUPABASE_SERVICE_ROLE_KEY` only if used).  
-3. Match Supabase **redirect URLs** to the Vercel domain.  
-4. Run through the **Definition of done** in [docs/v2.md](./docs/v2.md#phase-5--deployment--credibility-05-10-h) (sign up, workspace, invite, tasks, negative permission checks).
+```text
+Browser (CRA + React Router) ──► Supabase Auth (JWT)
+                              ──► PostgREST ──► Postgres + RLS
+```
+
+- **Privileged flows:** `ensure_workspace_for_user`, `accept_workspace_invite` (security definer RPCs).
+- **RLS:** members CRUD **tasks**; admins manage **sprints**, **projects**, **invites**. Details: [docs/rls.md](./docs/rls.md).
+
+---
+
+## Deployment (Vercel) — Phase 5
+
+Not live yet. When ready: connect repo, set `REACT_APP_SUPABASE_*` (or `NEXT_PUBLIC_*` after Next migration), match Supabase redirect URLs to the Vercel domain. See [docs/v2.md § Phase 5](./docs/v2.md#phase-5--deployment--credibility-05-10-h).
 
 ---
 
@@ -187,7 +160,11 @@ Browser (Next.js) ──► Supabase Auth (JWT)
 | `npm run build` | Production build |
 | `npm test` | CRA test runner |
 
-(Add `lint` / `typecheck` when Next.js and tooling land — tracked in Phase 5 of [docs/v2.md](./docs/v2.md).)
+---
+
+## Git workflow (branches)
+
+Use **`main`** as the integration branch. Start each slice from updated `main` (e.g. `feat/phase-4-permissions-ui`). Delete feature branches after merge. See [AGENTS.md](./AGENTS.md).
 
 ---
 

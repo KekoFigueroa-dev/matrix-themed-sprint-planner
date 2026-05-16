@@ -4,7 +4,9 @@ This document explains **why** the database enforces access the way it does. **R
 
 Companion: [V2 spec](./v2.md) (entities, flows, phases).
 
-**Executable policies:** [../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql](../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql) — treat as source of truth; this doc explains intent. When policies change, update both the migration (new file) and this narrative.
+**Executable policies:** [../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql](../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql) — treat as source of truth; this doc explains intent. When policies change, add a **new** migration file and update this narrative.
+
+**Planner columns:** [../supabase/migrations/20250517120000_tasks_planner_fields.sql](../supabase/migrations/20250517120000_tasks_planner_fields.sql) adds `priority` and `assignee_member_id` on `tasks` (app-local team reference; not an FK to `auth.users`).
 
 ---
 
@@ -47,6 +49,7 @@ Implementations live in SQL migrations; names may be prefixed (e.g. `public.is_w
 ### `tasks`
 
 - **SELECT / INSERT / UPDATE / DELETE:** any **member** (admin or member) of the workspace for `tasks.workspace_id`.
+- Columns used by the CRA planner: `title`, `status` (`todo` | `doing` | `done`), `sprint_id`, `priority`, `assignee_member_id` (optional; maps to local team list in the browser).
 
 ### Non-members
 
@@ -68,9 +71,10 @@ Both RPCs run as **security definer** with a fixed `search_path`; membership wri
 ## Testing checklist (run in Supabase SQL or app)
 
 - [ ] User **not** in workspace: **zero** rows from `tasks`, `projects`, `sprints`, `invites` for that workspace.
-- [ ] **Member:** can CRUD **tasks**; **cannot** insert/update/delete `projects`, `sprints`, `invites`.
-- [ ] **Admin:** full structure + invites.
+- [ ] **Member:** can CRUD **tasks**; **cannot** insert/update/delete `projects`, `sprints`, `invites` (RLS error from client).
+- [ ] **Admin:** full structure + invites; sprint CRUD in app succeeds.
 - [ ] **Invite accept:** only matching email succeeds; other users get error / no-op.
+- [ ] **Planner (app):** after sign-in, creating sprint/task writes to `sprints` / `tasks` with correct `workspace_id`; refresh reloads from DB.
 
 ---
 
