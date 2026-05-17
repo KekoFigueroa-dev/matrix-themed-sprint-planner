@@ -15,7 +15,7 @@
 
 - **PR 1 (this slice):** Document hierarchy here; **About** page + links; README aligned with Option A.
 - **PR 2:** Task tracker (statuses, dates, Done view) — migration + UI.
-- **PR 3:** **ProjectManager** + project selector; filter sprints/tasks by project — in progress.
+- **PR 3:** **ProjectManager** + project selector; filter sprints/tasks by project — done (PR #23).
 - **PR 4:** Visual refinement (matrix green text, grid/texture, IDE-style labels).
 - **PR 5:** Polish sweep, docs, screenshots.
 
