@@ -65,7 +65,7 @@ const RegisterPage: React.FC = () => {
                         required
                         disabled={loading}
                     />
-                    <Button type="submit" fullWidth loading={loading}>
+                    <Button type="submit" variant="cta" fullWidth loading={loading}>
                         {loading ? 'Creating account…' : 'Create account'}
                     </Button>
                 </form>

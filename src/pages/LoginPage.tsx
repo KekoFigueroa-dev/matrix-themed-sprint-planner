@@ -62,7 +62,10 @@ const LoginPage: React.FC = () => {
                     </Button>
                 </form>
                 <p className="auth-footer">
-                    No account? <Link to="/register">Register</Link>
+                    No account?{' '}
+                    <Link to="/register" className="auth-cta-link">
+                        Register
+                    </Link>
                 </p>
                 <p className="auth-footer auth-footer--about">
                     <Link to="/about" className="app-footer-link">

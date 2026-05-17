@@ -1,21 +1,28 @@
-/* V2.1 design tokens + UI primitives */
+/* V2.1 tokens + V2.2 PR4 matrix green theme */
 @import './ui/ui.css';
+@import './ui/theme-matrix.css';
 @import './ui/planner.css';
 
 :root {
-  --bg-0: #0b0614;
-  --bg-1: #120a22;
-  --bg-2: #1a0f2e;
-  --border-0: rgba(255, 255, 255, 0.08);
-  --text-0: rgba(255, 255, 255, 0.92);
-  --text-1: rgba(255, 255, 255, 0.72);
-  --text-2: rgba(255, 255, 255, 0.52);
+  --bg-0: #050a07;
+  --bg-1: #0a120d;
+  --bg-2: #101a14;
+  --border-0: rgba(0, 255, 65, 0.14);
+  --text-0: #c8f5d8;
+  --text-1: #7ddea0;
+  --text-2: #4a9f68;
+  --matrix-0: #00ff41;
+  --matrix-1: #00cc34;
+  --matrix-2: #008f24;
   --accent-0: #ff4fd8;
   --accent-1: #b84bff;
+  --cta-0: #ff3b3b;
+  --cta-0-hover: #ff5555;
   --danger-0: #ff3b6b;
   --success-0: #2ee59d;
   --warning-0: #ffcf5a;
-  --focus-ring: rgba(255, 79, 216, 0.45);
+  --focus-ring: rgba(0, 255, 65, 0.4);
+  --focus-ring-accent: rgba(255, 79, 216, 0.45);
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Inter, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   --text-xs: 12px;
@@ -36,8 +43,8 @@
 }
 
 ::selection {
-  background: rgba(255, 79, 216, 0.28);
-  color: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 255, 65, 0.25);
+  color: #e8fff0;
 }
 
 /* --- Main layout --- */
