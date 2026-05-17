@@ -3,17 +3,22 @@ import { Link } from 'react-router-dom';
 import type { Sprint, Todo } from '../types';
 import { fetchActiveWorkspaceContext } from '../lib/workspace';
 import {
-    archiveAllDoneTasks,
+    archiveDoneTasksForProject,
     fetchDoneTasks,
     fetchSprints,
     restoreTask,
     deleteTask,
 } from '../lib/plannerDb';
+import { fetchProjects } from '../lib/projectsDb';
 import { errorMessageFromUnknown } from '../lib/supabaseErrors';
 import { taskStatusLabel } from '../lib/taskLabels';
 import { Button, Card, InlineAlert } from '../ui';
 
 const SHOW_ARCHIVED_KEY = 'done:showArchived';
+
+function currentProjectStorageKey(workspaceId: string): string {
+    return `planner:currentProjectId:${workspaceId}`;
+}
 
 function readShowArchivedPreference(): boolean {
     try {
@@ -32,6 +37,8 @@ const DonePage: React.FC = () => {
     const [workspaceId, setWorkspaceId] = useState<string | null>(null);
     const [todos, setTodos] = useState<Todo[]>([]);
     const [sprints, setSprints] = useState<Sprint[]>([]);
+    const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+    const [currentProjectName, setCurrentProjectName] = useState<string | null>(null);
     const [showArchived, setShowArchived] = useState(readShowArchivedPreference);
 
     const load = useCallback(async () => {
@@ -47,10 +54,18 @@ const DonePage: React.FC = () => {
                 return;
             }
             setWorkspaceId(ctx.workspaceId);
-            const [doneTasks, sprintList] = await Promise.all([
+            const [doneTasks, sprintList, projectList] = await Promise.all([
                 fetchDoneTasks(ctx.workspaceId),
                 fetchSprints(ctx.workspaceId),
+                fetchProjects(ctx.workspaceId),
             ]);
+            const savedProjectId = localStorage.getItem(
+                currentProjectStorageKey(ctx.workspaceId)
+            );
+            const activeProject =
+                projectList.find((p) => p.id === savedProjectId) ?? projectList[0] ?? null;
+            setCurrentProjectId(activeProject?.id ?? null);
+            setCurrentProjectName(activeProject?.name ?? null);
             setTodos(doneTasks);
             setSprints(sprintList);
         } catch (e) {
@@ -72,14 +87,28 @@ const DonePage: React.FC = () => {
         }
     }, [showArchived]);
 
+    const sprintProjectById = useMemo(() => {
+        const map = new Map<string, string | null>();
+        sprints.forEach((s) => map.set(s.id, s.projectId));
+        return map;
+    }, [sprints]);
+
+    const projectScopedTodos = useMemo(() => {
+        if (!currentProjectId) return todos;
+        return todos.filter((t) => sprintProjectById.get(t.sprintId) === currentProjectId);
+    }, [todos, currentProjectId, sprintProjectById]);
+
     const visibleTodos = useMemo(
-        () => (showArchived ? todos : todos.filter((t) => !t.archived)),
-        [todos, showArchived]
+        () =>
+            showArchived
+                ? projectScopedTodos
+                : projectScopedTodos.filter((t) => !t.archived),
+        [projectScopedTodos, showArchived]
     );
 
     const unarchivedDoneCount = useMemo(
-        () => todos.filter((t) => t.status === 'done' && !t.archived).length,
-        [todos]
+        () => projectScopedTodos.filter((t) => t.status === 'done' && !t.archived).length,
+        [projectScopedTodos]
     );
 
     const sprintNameById = useMemo(() => {
@@ -123,19 +152,26 @@ const DonePage: React.FC = () => {
     };
 
     const handleArchiveAll = async () => {
-        if (!workspaceId || unarchivedDoneCount === 0) return;
+        if (!workspaceId || !currentProjectId || unarchivedDoneCount === 0) return;
         setActionError(null);
         setActionInfo(null);
         setArchiving(true);
         try {
-            const count = await archiveAllDoneTasks(workspaceId);
+            const count = await archiveDoneTasksForProject(workspaceId, currentProjectId);
             if (count === 0) {
                 setActionInfo('No completed tasks to archive.');
             } else {
                 setTodos((prev) =>
-                    prev.map((t) =>
-                        t.status === 'done' && !t.archived ? { ...t, archived: true } : t
-                    )
+                    prev.map((t) => {
+                        if (
+                            t.status === 'done' &&
+                            !t.archived &&
+                            sprintProjectById.get(t.sprintId) === currentProjectId
+                        ) {
+                            return { ...t, archived: true };
+                        }
+                        return t;
+                    })
                 );
                 setActionInfo(
                     `Archived ${count} completed task${count === 1 ? '' : 's'}. Turn on “Show archived” to see them.`
@@ -165,10 +201,12 @@ const DonePage: React.FC = () => {
                     </Link>
                     <h1 className="done-page__title">Done & archived</h1>
                     <p className="done-page__subtitle">
+                        {currentProjectName
+                            ? `Showing done tasks for project “${currentProjectName}” (same as planner). `
+                            : ''}
                         Marking a task <strong>Done</strong> removes it from the sprint board. Use{' '}
                         <strong>Archive completed</strong> below to hide finished tasks from this
-                        list (they stay in the database). Restore sends a task back to the board as
-                        Todo.
+                        list. Restore sends a task back to the board as Todo.
                     </p>
                 </header>
 
@@ -187,8 +225,8 @@ const DonePage: React.FC = () => {
                 {visibleTodos.length === 0 ? (
                     <Card className="done-card">
                         <p className="done-empty">
-                            {todos.length === 0
-                                ? 'No done or archived tasks yet.'
+                            {projectScopedTodos.length === 0
+                                ? 'No done or archived tasks for this project yet.'
                                 : 'No tasks to show. Turn on “Show archived” to see archived items.'}
                         </p>
                     </Card>
