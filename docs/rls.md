@@ -6,7 +6,9 @@ Companion: [V2 spec](./v2.md) (entities, flows, phases).
 
 **Executable policies:** [../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql](../supabase/migrations/20250514130000_initial_schema_workspaces_rls.sql) — treat as source of truth; this doc explains intent. When policies change, add a **new** migration file and update this narrative.
 
-**Planner columns:** [../supabase/migrations/20250517120000_tasks_planner_fields.sql](../supabase/migrations/20250517120000_tasks_planner_fields.sql) adds `priority` and legacy `assignee_member_id`. [../supabase/migrations/20250518120000_workspace_profiles.sql](../supabase/migrations/20250518120000_workspace_profiles.sql) adds `workspace_profiles` (roster display names) and `tasks.assignee_user_id` → `auth.users`.
+**Planner columns:** [../supabase/migrations/20250517120000_tasks_planner_fields.sql](../supabase/migrations/20250517120000_tasks_planner_fields.sql) adds `priority` and legacy `assignee_member_id`. [../supabase/migrations/20250518120000_workspace_profiles.sql](../supabase/migrations/20250518120000_workspace_profiles.sql) adds `workspace_profiles` (roster display names) and `tasks.assignee_user_id` → `auth.users`. Tracker fields: [../supabase/migrations/20250519120000_tasks_tracker_fields.sql](../supabase/migrations/20250519120000_tasks_tracker_fields.sql). Projects: [../supabase/migrations/20250520120000_backfill_general_project.sql](../supabase/migrations/20250520120000_backfill_general_project.sql).
+
+**Schema diagram (production Supabase):** [README § Data model](../README.md#data-model-supabase) · [`docs/images/supaDB.png`](./images/supaDB.png)
 
 ---
 
