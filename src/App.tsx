@@ -7,6 +7,7 @@ import PlannerPage from './pages/PlannerPage';
 import InvitesPage from './pages/InvitesPage';
 import RegisterPage from './pages/RegisterPage';
 import AboutPage from './pages/AboutPage';
+import DonePage from './pages/DonePage';
 import { getSupabase, isSupabaseConfigured } from './lib/supabaseClient';
 
 /** Unblock UI if auth listener never fires (broken storage, etc.). */
@@ -102,6 +103,7 @@ const SessionRoutes: React.FC = () => {
             <Route path="/login" element={session ? <Navigate to="/" replace /> : <LoginPage />} />
             <Route path="/register" element={session ? <Navigate to="/" replace /> : <RegisterPage />} />
             <Route path="/invites" element={session ? <InvitesPage /> : <Navigate to="/login" replace />} />
+            <Route path="/done" element={session ? <DonePage /> : <Navigate to="/login" replace />} />
             <Route path="/" element={session ? <PlannerPage /> : <Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

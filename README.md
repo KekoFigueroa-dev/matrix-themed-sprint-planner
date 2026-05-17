@@ -40,7 +40,8 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 ## Features (today)
 
 - Sprint CRUD and switcher (stored in **Supabase**)
-- Tasks with priority, complete toggle, assignee by workspace member (`assignee_user_id`)
+- Tasks with status (todo / in progress / blocked / done), dates, priority, assignee (`assignee_user_id`)
+- **Done** view at `/done` (completed & archived tasks, restore or delete)
 - Team sidebar from **Supabase** (`workspace_profiles`)
 - Stats strip; V2.1 ink/purple planner UI (V2.2 adds matrix-green refinement)
 - Multi-user workspace + email invites
@@ -97,6 +98,7 @@ Run each file once in **SQL Editor** (or `supabase db push` if CLI is linked):
 | 3 | `supabase/migrations/20250516180000_accept_workspace_invite.sql` | Accept invite RPC |
 | 4 | `supabase/migrations/20250517120000_tasks_planner_fields.sql` | `priority`, `assignee_member_id` on `tasks` |
 | 5 | `supabase/migrations/20250518120000_workspace_profiles.sql` | `workspace_profiles`, `tasks.assignee_user_id`, `ensure_workspace_profiles` RPC |
+| 6 | `supabase/migrations/20250519120000_tasks_tracker_fields.sql` | Task statuses, dates, `archived` (V2.2 PR2) |
 
 **Dashboard checklist**
 
