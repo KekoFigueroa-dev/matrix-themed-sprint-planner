@@ -1,0 +1,48 @@
+/* V2.2 PR4 — matrix green surfaces (tokens in styles.css :root) */
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.045;
+  background-image:
+    linear-gradient(rgba(0, 255, 65, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.025;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.35) 2px,
+    rgba(0, 0, 0, 0.35) 4px
+  );
+}
+
+.auth-page,
+.invites-page,
+.about-page,
+.done-page,
+.planner-page {
+  position: relative;
+  isolation: isolate;
+}
+
+.auth-page > *,
+.invites-page__inner,
+.about-page__inner,
+.done-page__inner,
+.planner-page > * {
+  position: relative;
+  z-index: 1;
+}

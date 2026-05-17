@@ -32,7 +32,7 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 | **Permissions** | Role badge; members CRUD tasks; admins manage projects/sprints/invites; RLS via `supabaseErrors.ts` |
 | **About** | `/about` — stack, links, product hierarchy ([AboutPage](./src/pages/AboutPage.tsx)) |
 | **Deploy** | **Live** on Vercel — [Deployment (Vercel)](#deployment-vercel) |
-| **V2.2 in progress** | Matrix-green theme + polish (PR 4–5) — [docs/v2.2.md](./docs/v2.2.md) |
+| **V2.2 in progress** | Polish + docs (PR 5) — [docs/v2.2.md](./docs/v2.2.md) |
 | **Post-V2 optional** | Next.js migration; invite email — [docs/v2.md § Optional follow-ups](./docs/v2.md#optional-follow-ups-not-v2) |
 
 ---
@@ -44,7 +44,7 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 - Tasks with status (todo / in progress / blocked / done), dates, priority, assignee (`assignee_user_id`)
 - **Done** view at `/done` (completed & archived tasks, restore or delete)
 - Team sidebar from **Supabase** (`workspace_profiles`)
-- Stats strip; V2.1 ink/purple planner UI (V2.2 adds matrix-green refinement)
+- Stats strip; matrix-green text hierarchy + magenta accents (V2.2 PR4)
 - Multi-user workspace + email invites
 - **About** page at `/about`
 
