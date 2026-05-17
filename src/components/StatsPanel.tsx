@@ -1,28 +1,34 @@
 
 import React from 'react';
-import { Todo } from '../types';
+import { Todo, isActivePlannerTask } from '../types';
 
 interface StatsPanelProps {
   todos: Todo[];
 }
 
 const StatsPanel: React.FC<StatsPanelProps> = ({ todos }) => {
-  const completedTasks = todos.filter((t) => t.completed).length;
-  const inProgressTasks = todos.length - completedTasks;
+  const active = todos.filter(isActivePlannerTask);
+  const inProgress = active.filter((t) => t.status === 'in_progress').length;
+  const blocked = active.filter((t) => t.status === 'blocked').length;
+  const todoCount = active.filter((t) => t.status === 'todo').length;
 
   return (
     <div className="planner-stats__grid">
       <div className="planner-stat">
-        <span className="planner-stat__value">{inProgressTasks}</span>
+        <span className="planner-stat__value">{active.length}</span>
+        <span className="planner-stat__label">Active in sprint</span>
+      </div>
+      <div className="planner-stat">
+        <span className="planner-stat__value">{inProgress}</span>
         <span className="planner-stat__label">In progress</span>
       </div>
       <div className="planner-stat">
-        <span className="planner-stat__value">{completedTasks}</span>
-        <span className="planner-stat__label">Completed</span>
+        <span className="planner-stat__value">{blocked}</span>
+        <span className="planner-stat__label">Blocked</span>
       </div>
       <div className="planner-stat">
-        <span className="planner-stat__value">{todos.length}</span>
-        <span className="planner-stat__label">Total in sprint</span>
+        <span className="planner-stat__value">{todoCount}</span>
+        <span className="planner-stat__label">Todo</span>
       </div>
     </div>
   );

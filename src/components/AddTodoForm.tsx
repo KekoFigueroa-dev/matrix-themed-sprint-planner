@@ -5,7 +5,12 @@ import type { WorkspaceProfile } from '../lib/teamDb';
 import { Button } from '../ui';
 
 interface AddTodoFormProps {
-  addTodo: (text: string, priority: Priority, assigneeUserId?: string) => void;
+  addTodo: (
+    text: string,
+    priority: Priority,
+    assigneeUserId?: string,
+    expectedDeliveryOn?: string | null
+  ) => void;
   profiles: WorkspaceProfile[];
   disabled?: boolean;
 }
@@ -16,14 +21,21 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, profiles, disabled =
   const [text, setText] = useState('');
   const [priority, setPriority] = useState<Priority>('Medium');
   const [assigneeUserId, setAssigneeUserId] = useState('');
+  const [expectedDeliveryOn, setExpectedDeliveryOn] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim()) {
-      addTodo(text.trim(), priority, assigneeUserId || undefined);
+      addTodo(
+        text.trim(),
+        priority,
+        assigneeUserId || undefined,
+        expectedDeliveryOn || null
+      );
       setText('');
       setPriority('Medium');
       setAssigneeUserId('');
+      setExpectedDeliveryOn('');
     }
   };
 
@@ -60,6 +72,19 @@ const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo, profiles, disabled =
             </option>
           ))}
         </select>
+      </div>
+      <div className="planner-add-task__due">
+        <label className="ui-field__label" htmlFor="add-task-due">
+          Due (optional)
+        </label>
+        <input
+          id="add-task-due"
+          type="date"
+          className="ui-input"
+          value={expectedDeliveryOn}
+          onChange={(e) => setExpectedDeliveryOn(e.target.value)}
+          disabled={disabled}
+        />
       </div>
       <div className="planner-add-task__assignee">
         <label className="ui-field__label" htmlFor="add-task-assignee">

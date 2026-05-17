@@ -9,7 +9,7 @@
 | **Workspace** | Tenant boundary; one team shares data here. Created on first sign-in (`ensure_workspace_for_user`) or joined via invite. | Owner bootstrap; members via invites |
 | **Project** | Named bucket of work inside a workspace (e.g. “Mobile app”, “Ops”). Sprints and tasks can reference a project. | **Admins** create/rename/delete; **members** read and select |
 | **Sprint** | Time-boxed iteration under a workspace (optionally tied to a project). Task list is filtered by active sprint in the planner. | **Admins** CRUD; **members** switch sprint and work on tasks |
-| **Task** | Unit of work: title, status, priority, assignee, dates (tracker fields in V2.2+). Belongs to workspace + sprint; inherits `project_id` from sprint when applicable. | **All members** CRUD tasks; RLS enforces workspace membership |
+| **Task** | Unit of work: title, status (`todo` / `in_progress` / `blocked` / `done`), priority, assignee, started/due/finished dates, optional `archived`. Belongs to workspace + sprint. | **All members** CRUD tasks; RLS enforces workspace membership |
 
 ## UI roadmap (V2.2 polish sprint)
 

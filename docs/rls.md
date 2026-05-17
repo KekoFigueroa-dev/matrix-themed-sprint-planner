@@ -49,7 +49,7 @@ Implementations live in SQL migrations; names may be prefixed (e.g. `public.is_w
 ### `tasks`
 
 - **SELECT / INSERT / UPDATE / DELETE:** any **member** (admin or member) of the workspace for `tasks.workspace_id`.
-- Columns used by the CRA planner: `title`, `status` (`todo` | `doing` | `done`), `sprint_id`, `priority`, `assignee_user_id` (optional; FK to `auth.users`).
+- Columns used by the CRA planner: `title`, `status` (`todo` | `in_progress` | `blocked` | `done`), `sprint_id`, `priority`, `assignee_user_id`, `started_on`, `expected_delivery_on`, `finished_on`, `blocked_reason`, `archived`.
 
 ### `workspace_profiles`
 

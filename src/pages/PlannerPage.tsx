@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Todo, Priority, Sprint } from '../types';
+import { Todo, Priority, Sprint, isActivePlannerTask } from '../types';
 import TodoItem from '../components/TodoItem';
 import AddTodoForm from '../components/AddTodoForm';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -13,6 +13,7 @@ import { fetchActiveWorkspaceContext, type WorkspaceRole } from '../lib/workspac
 import { errorMessageFromUnknown } from '../lib/supabaseErrors';
 import { usePlannerBodyLock } from '../hooks/usePlannerBodyLock';
 import {
+    archiveDoneTasksForSprint,
     createSprint,
     createTask,
     deleteSprintAndTasks,
@@ -20,7 +21,8 @@ import {
     fetchSprints,
     fetchTasks,
     updateSprintName,
-    updateTaskStatus,
+    updateTask,
+    type TaskUpdatePatch,
 } from '../lib/plannerDb';
 import {
     ensureWorkspaceProfiles,
@@ -168,7 +170,12 @@ const PlannerPage: React.FC = () => {
         }
     };
 
-    const addTodo = async (text: string, priority: Priority, assigneeUserId?: string) => {
+    const addTodo = async (
+        text: string,
+        priority: Priority,
+        assigneeUserId?: string,
+        expectedDeliveryOn?: string | null
+    ) => {
         if (!workspaceId || !currentSprintId) return;
         setActionError(null);
         try {
@@ -177,7 +184,8 @@ const PlannerPage: React.FC = () => {
                 currentSprintId,
                 text,
                 priority,
-                assigneeUserId
+                assigneeUserId,
+                expectedDeliveryOn
             );
             setTodos((prev) => [created, ...prev]);
         } catch (e) {
@@ -185,17 +193,40 @@ const PlannerPage: React.FC = () => {
         }
     };
 
-    const toggleTodo = async (id: string) => {
-        const todo = todos.find((t) => t.id === id);
-        if (!todo) return;
-        const nextCompleted = !todo.completed;
+    const handleTaskUpdate = async (id: string, patch: TaskUpdatePatch) => {
+        setActionError(null);
         try {
-            await updateTaskStatus(id, nextCompleted);
-            setTodos((prev) =>
-                prev.map((t) => (t.id === id ? { ...t, completed: nextCompleted } : t))
-            );
+            const updated = await updateTask(id, patch);
+            setTodos((prev) => {
+                if (!isActivePlannerTask(updated)) {
+                    return prev.filter((t) => t.id !== id);
+                }
+                return prev.map((t) => (t.id === id ? updated : t));
+            });
         } catch (e) {
             reportMutationError('Could not update task', e);
+        }
+    };
+
+    const handleArchiveCompleted = async () => {
+        if (!workspaceId || !currentSprintId) return;
+        setActionError(null);
+        try {
+            const count = await archiveDoneTasksForSprint(currentSprintId, workspaceId);
+            if (count > 0) {
+                setTodos((prev) =>
+                    prev.filter(
+                        (t) =>
+                            !(
+                                t.sprintId === currentSprintId &&
+                                t.status === 'done' &&
+                                !t.archived
+                            )
+                    )
+                );
+            }
+        } catch (e) {
+            reportMutationError('Could not archive completed tasks', e);
         }
     };
 
@@ -224,7 +255,9 @@ const PlannerPage: React.FC = () => {
         }
     };
 
-    const filteredTodos = todos.filter((todo) => todo.sprintId === currentSprintId);
+    const filteredTodos = todos.filter(
+        (todo) => todo.sprintId === currentSprintId && isActivePlannerTask(todo)
+    );
 
     const showPlannerLayout = !plannerLoading;
     usePlannerBodyLock(showPlannerLayout);
@@ -273,6 +306,9 @@ const PlannerPage: React.FC = () => {
                         <Link to="/invites" className="planner-link">
                             Invites
                         </Link>
+                        <Link to="/done" className="planner-link">
+                            Done
+                        </Link>
                         <Link to="/about" className="planner-link">
                             About
                         </Link>
@@ -304,7 +340,17 @@ const PlannerPage: React.FC = () => {
                 </header>
                 <div className="planner-main__body">
                     <Card className="planner-card">
-                        <h2 className="planner-card__heading">Add task</h2>
+                        <div className="planner-task-toolbar">
+                            <h2 className="planner-card__heading">Add task</h2>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                disabled={!currentSprintId}
+                                onClick={() => void handleArchiveCompleted()}
+                            >
+                                Archive completed
+                            </Button>
+                        </div>
                         <AddTodoForm
                             addTodo={addTodo}
                             profiles={teamProfiles}
@@ -318,8 +364,8 @@ const PlannerPage: React.FC = () => {
                                     <TodoItem
                                         key={todo.id}
                                         todo={todo}
-                                        toggleTodo={toggleTodo}
-                                        deleteTodo={deleteTodoHandler}
+                                        onUpdate={handleTaskUpdate}
+                                        onDelete={deleteTodoHandler}
                                         profiles={teamProfiles}
                                     />
                                 ))
