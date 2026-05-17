@@ -13,7 +13,6 @@ import { fetchActiveWorkspaceContext, type WorkspaceRole } from '../lib/workspac
 import { errorMessageFromUnknown } from '../lib/supabaseErrors';
 import { usePlannerBodyLock } from '../hooks/usePlannerBodyLock';
 import {
-    archiveDoneTasksForSprint,
     createSprint,
     createTask,
     deleteSprintAndTasks,
@@ -208,28 +207,6 @@ const PlannerPage: React.FC = () => {
         }
     };
 
-    const handleArchiveCompleted = async () => {
-        if (!workspaceId || !currentSprintId) return;
-        setActionError(null);
-        try {
-            const count = await archiveDoneTasksForSprint(currentSprintId, workspaceId);
-            if (count > 0) {
-                setTodos((prev) =>
-                    prev.filter(
-                        (t) =>
-                            !(
-                                t.sprintId === currentSprintId &&
-                                t.status === 'done' &&
-                                !t.archived
-                            )
-                    )
-                );
-            }
-        } catch (e) {
-            reportMutationError('Could not archive completed tasks', e);
-        }
-    };
-
     const deleteTodoHandler = async (id: string) => {
         try {
             await deleteTask(id);
@@ -340,17 +317,7 @@ const PlannerPage: React.FC = () => {
                 </header>
                 <div className="planner-main__body">
                     <Card className="planner-card">
-                        <div className="planner-task-toolbar">
-                            <h2 className="planner-card__heading">Add task</h2>
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                disabled={!currentSprintId}
-                                onClick={() => void handleArchiveCompleted()}
-                            >
-                                Archive completed
-                            </Button>
-                        </div>
+                        <h2 className="planner-card__heading">Add task</h2>
                         <AddTodoForm
                             addTodo={addTodo}
                             profiles={teamProfiles}

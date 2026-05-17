@@ -232,6 +232,20 @@ export async function archiveDoneTasksForSprint(
     return data?.length ?? 0;
 }
 
+/** Mark all completed (non-archived) tasks in the workspace as archived. */
+export async function archiveAllDoneTasks(workspaceId: string): Promise<number> {
+    const { data, error } = await getSupabase()
+        .from('tasks')
+        .update({ archived: true })
+        .eq('workspace_id', workspaceId)
+        .eq('status', 'done')
+        .eq('archived', false)
+        .select('id');
+
+    if (error) throw new Error(error.message);
+    return data?.length ?? 0;
+}
+
 export async function restoreTask(taskId: string): Promise<Todo> {
     return updateTask(taskId, { archived: false, status: 'todo' });
 }
