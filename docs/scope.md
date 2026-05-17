@@ -20,3 +20,5 @@
 - **PR 5:** Polish sweep, docs, screenshots.
 
 Executable plan: [v2.2.md](./v2.2.md).
+
+**Visual reference (production schema):** [README § Data model](../README.md#data-model-supabase) · [`docs/images/supaDB.png`](./images/supaDB.png)

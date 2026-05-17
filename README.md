@@ -4,6 +4,8 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 
 **Live demo:** https://matrix-themed-sprint-planner.vercel.app
 
+**For reviewers:** jump to [App walkthrough (screenshots)](#app-walkthrough-production) and [Data model](#data-model-supabase) below.
+
 ## Documentation map (start here)
 
 | Doc | Purpose |
@@ -133,54 +135,91 @@ Maintainer test plans: [docs/v2.md](./docs/v2.md) (Phases 1–3, Planner slice).
 
 ---
 
-## Screenshots
+## App walkthrough (production)
 
-Add PNGs under [`docs/images/`](./docs/images/) (see [`docs/images/README.md`](./docs/images/README.md)):
+Captured from **production** ([matrix-themed-sprint-planner.vercel.app](https://matrix-themed-sprint-planner.vercel.app)). Together these show what a user sees and how the product maps to Supabase.
 
-| Image | Page |
-|-------|------|
-| `login.png` | Sign in |
-| `planner.png` | Planner (project + sprint + tasks) |
-| `done.png` | Done & archived |
-| `invites.png` | Workspace invites |
+### How it works (30 seconds)
 
-Embed in README once files exist:
+1. **Sign in** with Supabase Auth (email + password). First sign-in bootstraps a **workspace** via RPC.
+2. **Planner** — pick a **project** → **sprint** → manage **tasks** (status, priority, due date, assignee). Team roster and display names live in `workspace_profiles`.
+3. Mark a task **Done** → it leaves the active board and appears on **Done & archived** (restore or delete; optional archive to hide from the default list).
+4. **Admins** invite collaborators on `/invites` (no email sent by the app — invitee must register with the invited address and **Accept**).
+5. All data is stored in **Postgres** with **RLS**; the browser talks to Supabase only (no custom backend).
 
-```markdown
-![Login](./docs/images/login.png)
-![Planner](./docs/images/planner.png)
+```mermaid
+flowchart LR
+  subgraph auth [Auth]
+    Login["/login · /register"]
+  end
+  subgraph planner [Planner]
+    Project[Project]
+    Sprint[Sprint]
+    Tasks[Tasks]
+    Project --> Sprint --> Tasks
+  end
+  subgraph done [Done bucket]
+    DonePage["/done"]
+    Archive[Archive / restore]
+  end
+  subgraph admin [Admin]
+    Invites["/invites"]
+  end
+  Login --> Project
+  Tasks -->|status done| DonePage
+  DonePage --> Archive
+  Login --> Invites
 ```
 
----
+### Sign in
 
+Matrix-green auth UI; **Supabase Auth** and **Workspace RLS** called out on the card. Primary **Sign in** (magenta); **Register** link in red (key CTA for new users).
+
+![Sign in — Supabase Auth, workspace RLS, Register CTA](./docs/images/login.png)
+
+### Planner (core board)
+
+Main workspace UI: **team** sidebar (shared display names, admin badge), **project** and **sprint** selectors (admin CRUD), **add task** form (priority, optional due date, assignee), and task list with **status** (todo / in progress / blocked / done). Stats strip at the bottom summarizes active work in the current sprint.
+
+![Planner — project, sprint, tasks, team, statuses](./docs/images/planner.png)
+
+### Done and archived
+
+Completed work for the **active project**. **Archive completed** hides finished items from the default list; **Show archived** brings them back. **Restore** sends a task to the planner as **todo** again.
+
+![Done page — completed tasks, archive toggle, restore](./docs/images/done.png)
+
+### Workspace invites (admin)
+
+Admins create invites by workspace + email + role (**member** vs **admin**). The app does **not** send email — copy tells the admin to have the teammate register with that exact address. Outstanding invites can be revoked here.
+
+![Invites — admin create invite, role selection](./docs/images/invites.png)
+
+### Data model (Supabase)
+
+Schema from the Supabase dashboard (same project as production). **Workspace-centric**: `workspaces` → `projects` → `sprints` → `tasks`, plus `workspace_members`, `workspace_profiles`, and `invites`. Tasks link to `assignee_user_id` and include tracker fields (`status`, dates, `archived`, `blocked_reason`). RLS policies enforce admin vs member capabilities (see [docs/rls.md](./docs/rls.md)).
+
+![Supabase schema — workspaces, projects, sprints, tasks, invites, profiles](./docs/images/supaDB.png)
+
+More detail: [docs/scope.md](./docs/scope.md) · ERD aligns with migrations in `supabase/migrations/`.
+
+---
 
 ## Project structure
 
 ```text
 docs/
-  ├── v2.md
-  └── rls.md
+  ├── v2.md, v2.2.md, scope.md, rls.md
+  ├── v2.2-qa.md, v2.2-ship-guide.md
+  └── images/            # Production screenshots (README walkthrough)
 supabase/migrations/     # SQL — apply in order (see table above)
 src/
   ├── App.tsx            # Auth gate + routes
-  ├── lib/
-  │   ├── supabaseClient.ts
-  │   ├── workspace.ts
-  │   ├── plannerDb.ts
-  │   ├── projectsDb.ts
-  │   └── supabaseErrors.ts
-  ├── ui/                # Button, Card, EmptyState, theme-matrix.css, …
-  ├── pages/
-  │   ├── PlannerPage.tsx
-  │   ├── LoginPage.tsx
-  │   ├── RegisterPage.tsx
-  │   ├── InvitesPage.tsx
-  │   └── ConfigMissingPage.tsx
-  └── components/        # SprintManager, TodoItem, TeamPanel, …
-vercel.json              # Vercel: npm ci + CRA build + SPA rewrites
-AGENTS.md
-README.md
-.env.example
+  ├── lib/               # supabaseClient, workspace, plannerDb, projectsDb, teamDb, …
+  ├── ui/                # Design system + theme-matrix.css
+  ├── pages/             # Planner, Login, Register, Invites, Done, About, …
+  └── components/        # ProjectManager, SprintManager, TodoItem, TeamPanel, …
+vercel.json
 ```
 
 ---
