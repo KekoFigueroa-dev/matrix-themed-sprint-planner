@@ -10,3 +10,5 @@ export { default as Badge } from './Badge';
 export type { BadgeProps, BadgeRole } from './Badge';
 export { default as InlineAlert } from './InlineAlert';
 export type { InlineAlertProps, InlineAlertVariant } from './InlineAlert';
+export { default as EmptyState } from './EmptyState';
+export type { EmptyStateProps } from './EmptyState';

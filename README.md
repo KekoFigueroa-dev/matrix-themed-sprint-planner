@@ -10,7 +10,7 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 |-----|--------|
 | **[docs/v2.md](./docs/v2.md)** | V2 spec (phases 0–5 **Done**): entities, permission matrix, flows |
 | **[docs/v2.1.md](./docs/v2.1.md)** | V2.1: vaporwave polish + team in Supabase — [QA checklist](./docs/v2.1-qa.md) |
-| **[docs/v2.2.md](./docs/v2.2.md)** | V2.2 polish sprint (in progress): projects UI, task tracker, About, theme |
+| **[docs/v2.2.md](./docs/v2.2.md)** | V2.2 polish sprint — [QA checklist](./docs/v2.2-qa.md) · [Ship guide (outside Cursor)](./docs/v2.2-ship-guide.md) |
 | **[docs/scope.md](./docs/scope.md)** | Product hierarchy: Workspace → Project → Sprint → Task |
 | **[docs/rls.md](./docs/rls.md)** | RLS policy model, RPC patterns, testing checklist |
 | **[AGENTS.md](./AGENTS.md)** | Agent rules, handoff habits, **Cursor bootstrap prompt** |
@@ -32,7 +32,7 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 | **Permissions** | Role badge; members CRUD tasks; admins manage projects/sprints/invites; RLS via `supabaseErrors.ts` |
 | **About** | `/about` — stack, links, product hierarchy ([AboutPage](./src/pages/AboutPage.tsx)) |
 | **Deploy** | **Live** on Vercel — [Deployment (Vercel)](#deployment-vercel) |
-| **V2.2 in progress** | Polish + docs (PR 5) — [docs/v2.2.md](./docs/v2.2.md) |
+| **V2.2** | Projects UI, task tracker, About, matrix theme, polish — [docs/v2.2.md](./docs/v2.2.md) |
 | **Post-V2 optional** | Next.js migration; invite email — [docs/v2.md § Optional follow-ups](./docs/v2.md#optional-follow-ups-not-v2) |
 
 ---
@@ -121,13 +121,38 @@ Maintainer test plans: [docs/v2.md](./docs/v2.md) (Phases 1–3, Planner slice).
 
 1. Register or sign in → planner loads.
 2. Hard refresh → still signed in, still on planner.
-3. Create sprint + task → rows appear in Supabase **`sprints`** / **`tasks`**.
-4. Open `/login`, `/invites`, and `/about` directly (no 404).
-5. Optional: `/invites` flow with two accounts (no invite email — invitee must register with the invited email).
+3. Select project → create sprint + task → rows in Supabase **`projects`** / **`sprints`** / **`tasks`**.
+4. Change task status → mark **Done** → task on `/done`; restore works.
+5. Open `/login`, `/invites`, `/done`, and `/about` directly (no 404).
+6. Optional: two-account invite flow (no invite email — invitee must register with the invited email).
+
+**Full V2.2 regression:** [docs/v2.2-qa.md](./docs/v2.2-qa.md)  
+**Deploy / merge / screenshots (outside Cursor):** [docs/v2.2-ship-guide.md](./docs/v2.2-ship-guide.md)
 
 **Local:** same steps at http://localhost:3000 after `.env.local` + migrations (add localhost URLs in Supabase if you develop locally).
 
 ---
+
+## Screenshots
+
+Add PNGs under [`docs/images/`](./docs/images/) (see [`docs/images/README.md`](./docs/images/README.md)):
+
+| Image | Page |
+|-------|------|
+| `login.png` | Sign in |
+| `planner.png` | Planner (project + sprint + tasks) |
+| `done.png` | Done & archived |
+| `invites.png` | Workspace invites |
+
+Embed in README once files exist:
+
+```markdown
+![Login](./docs/images/login.png)
+![Planner](./docs/images/planner.png)
+```
+
+---
+
 
 ## Project structure
 
@@ -140,9 +165,11 @@ src/
   ├── App.tsx            # Auth gate + routes
   ├── lib/
   │   ├── supabaseClient.ts
-  │   ├── workspace.ts   # Active workspace + role (prefers invited workspace)
-  │   ├── plannerDb.ts   # Sprints/tasks CRUD
-  │   └── supabaseErrors.ts  # User-friendly RLS messages
+  │   ├── workspace.ts
+  │   ├── plannerDb.ts
+  │   ├── projectsDb.ts
+  │   └── supabaseErrors.ts
+  ├── ui/                # Button, Card, EmptyState, theme-matrix.css, …
   ├── pages/
   │   ├── PlannerPage.tsx
   │   ├── LoginPage.tsx
