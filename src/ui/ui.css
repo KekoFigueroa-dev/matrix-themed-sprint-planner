@@ -297,6 +297,43 @@
   border-radius: 4px;
 }
 
+.ui-empty-state {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  border: 1px dashed var(--border-0);
+  border-radius: var(--radius-md);
+  background: rgba(0, 255, 65, 0.03);
+}
+
+.ui-empty-state__title {
+  margin: 0 0 var(--space-2) 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--matrix-0);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ui-empty-state__desc {
+  margin: 0 auto;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  line-height: 1.5;
+  max-width: 40ch;
+}
+
+.ui-empty-state__body {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-1);
+  line-height: 1.55;
+}
+
+.ui-empty-state__body a {
+  color: var(--matrix-0);
+}
+
 .auth-page {
   min-height: 100vh;
   display: flex;

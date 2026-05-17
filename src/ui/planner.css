@@ -558,6 +558,16 @@
   background: rgba(255, 59, 107, 0.1) !important;
 }
 
+.planner-empty-wrap {
+  margin: 0;
+  list-style: none;
+}
+
+.planner-empty-wrap .ui-empty-state {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .planner-empty {
   margin: 0;
   padding: var(--space-8) var(--space-4);
@@ -566,7 +576,7 @@
   color: var(--text-2);
   border: 1px dashed var(--border-0);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 255, 65, 0.03);
 }
 
 /* Stats */

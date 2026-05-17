@@ -12,7 +12,8 @@ import {
 import { fetchProjects } from '../lib/projectsDb';
 import { errorMessageFromUnknown } from '../lib/supabaseErrors';
 import { taskStatusLabel } from '../lib/taskLabels';
-import { Button, Card, InlineAlert } from '../ui';
+import { Button, Card, EmptyState, InlineAlert } from '../ui';
+import { formatMutationError } from '../lib/supabaseErrors';
 
 const SHOW_ARCHIVED_KEY = 'done:showArchived';
 
@@ -135,7 +136,7 @@ const DonePage: React.FC = () => {
             await restoreTask(id);
             setTodos((prev) => prev.filter((t) => t.id !== id));
         } catch (e) {
-            setActionError(`Could not restore task: ${errorMessageFromUnknown(e)}`);
+            setActionError(formatMutationError('Could not restore task', e));
         }
     };
 
@@ -147,7 +148,7 @@ const DonePage: React.FC = () => {
             await deleteTask(id);
             setTodos((prev) => prev.filter((t) => t.id !== id));
         } catch (e) {
-            setActionError(`Could not delete task: ${errorMessageFromUnknown(e)}`);
+            setActionError(formatMutationError('Could not delete task', e));
         }
     };
 
@@ -178,7 +179,7 @@ const DonePage: React.FC = () => {
                 );
             }
         } catch (e) {
-            setActionError(`Could not archive tasks: ${errorMessageFromUnknown(e)}`);
+            setActionError(formatMutationError('Could not archive tasks', e));
         } finally {
             setArchiving(false);
         }
@@ -224,11 +225,18 @@ const DonePage: React.FC = () => {
 
                 {visibleTodos.length === 0 ? (
                     <Card className="done-card">
-                        <p className="done-empty">
-                            {projectScopedTodos.length === 0
-                                ? 'No done or archived tasks for this project yet.'
-                                : 'No tasks to show. Turn on “Show archived” to see archived items.'}
-                        </p>
+                        <EmptyState
+                            title={
+                                projectScopedTodos.length === 0
+                                    ? 'Nothing in Done yet'
+                                    : 'All archived'
+                            }
+                            description={
+                                projectScopedTodos.length === 0
+                                    ? 'Tasks you mark Done on the planner appear here. Restore sends them back as Todo.'
+                                    : 'Turn on “Show archived” above to see hidden completed tasks.'
+                            }
+                        />
                     </Card>
                 ) : (
                     Array.from(grouped.entries()).map(([sprintId, items]) => (

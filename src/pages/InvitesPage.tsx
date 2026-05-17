@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
 import { errorMessageFromUnknown } from '../lib/supabaseErrors';
-import { Badge, Button, Card, InlineAlert, Input, Select } from '../ui';
+import { Badge, Button, Card, EmptyState, InlineAlert, Input, Select } from '../ui';
 import type { Session } from '@supabase/supabase-js';
 
 type InviteRole = 'admin' | 'member';
@@ -244,14 +244,14 @@ const InvitesPage: React.FC = () => {
                         </p>
                     )}
                     {pendingForMe.length === 0 ? (
-                        <div>
-                            <p className="invites-empty">No pending invites for this account.</p>
-                            {adminWorkspaces.length > 0 && (
-                                <p className="invites-empty" style={{ marginTop: 'var(--space-2)' }}>
-                                    Invites you <strong>created for others</strong> appear in the admin
-                                    section below, not here.
-                                </p>
-                            )}
+                        <EmptyState
+                            title="No pending invites"
+                            description={
+                                adminWorkspaces.length > 0
+                                    ? 'Invites you created for others appear in the admin section below.'
+                                    : 'You need an invite sent to the email you use to sign in.'
+                            }
+                        >
                             <ol className="invites-steps">
                                 <li>Ask your workspace admin to invite your email.</li>
                                 <li>
@@ -260,7 +260,7 @@ const InvitesPage: React.FC = () => {
                                 </li>
                                 <li>Return here and tap Accept.</li>
                             </ol>
-                        </div>
+                        </EmptyState>
                     ) : (
                         <ul className="invite-list">
                             {pendingForMe.map((inv) => (

@@ -37,7 +37,8 @@ import {
     fetchProjects,
     updateProjectName,
 } from '../lib/projectsDb';
-import { Badge, Button, Card, InlineAlert } from '../ui';
+import { Badge, Button, Card, EmptyState, InlineAlert } from '../ui';
+import { formatMutationError } from '../lib/supabaseErrors';
 
 function currentProjectStorageKey(workspaceId: string): string {
     return `planner:currentProjectId:${workspaceId}`;
@@ -200,10 +201,38 @@ const PlannerPage: React.FC = () => {
     };
 
     const reportMutationError = (label: string, e: unknown) => {
-        const msg = errorMessageFromUnknown(e);
         console.error(label, e);
-        setActionError(`${label}: ${msg}`);
+        setActionError(formatMutationError(label, e));
     };
+
+    const emptyTaskState = (() => {
+        if (projectSprints.length > 0) {
+            return {
+                title: 'No active tasks',
+                description: 'This sprint has no todo, in-progress, or blocked tasks. Add one above or mark Done tasks on the Done page.',
+            };
+        }
+        if (projects.length === 0) {
+            return isAdmin
+                ? {
+                      title: 'No projects yet',
+                      description: 'Create a project, then add a sprint and tasks.',
+                  }
+                : {
+                      title: 'Waiting for setup',
+                      description: 'An admin needs to create a project and sprint before you can add tasks.',
+                  };
+        }
+        return isAdmin
+            ? {
+                  title: 'No sprints in this project',
+                  description: 'Use the Sprint section above to create your first sprint.',
+              }
+            : {
+                  title: 'No sprints yet',
+                  description: 'Ask a workspace admin to add a sprint to this project.',
+              };
+    })();
 
     const addProject = async (name: string) => {
         if (!workspaceId || !isAdmin) return;
@@ -484,17 +513,12 @@ const PlannerPage: React.FC = () => {
                                     initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0 }}
-                                    className="planner-empty"
+                                    className="planner-empty-wrap"
                                 >
-                                    {projectSprints.length > 0
-                                        ? 'This sprint is empty. Add a task above.'
-                                        : projects.length === 0
-                                          ? isAdmin
-                                            ? 'Create a project to get started.'
-                                            : 'Waiting for an admin to create a project.'
-                                          : isAdmin
-                                            ? 'Create a sprint in this project.'
-                                            : 'No sprints in this project yet.'}
+                                    <EmptyState
+                                        title={emptyTaskState.title}
+                                        description={emptyTaskState.description}
+                                    />
                                 </motion.li>
                             )}
                         </AnimatePresence>
