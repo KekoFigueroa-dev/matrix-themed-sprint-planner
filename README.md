@@ -10,6 +10,8 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 |-----|--------|
 | **[docs/v2.md](./docs/v2.md)** | V2 spec (phases 0–5 **Done**): entities, permission matrix, flows |
 | **[docs/v2.1.md](./docs/v2.1.md)** | V2.1: vaporwave polish + team in Supabase — [QA checklist](./docs/v2.1-qa.md) |
+| **[docs/v2.2.md](./docs/v2.2.md)** | V2.2 polish sprint (in progress): projects UI, task tracker, About, theme |
+| **[docs/scope.md](./docs/scope.md)** | Product hierarchy: Workspace → Project → Sprint → Task |
 | **[docs/rls.md](./docs/rls.md)** | RLS policy model, RPC patterns, testing checklist |
 | **[AGENTS.md](./AGENTS.md)** | Agent rules, handoff habits, **Cursor bootstrap prompt** |
 
@@ -25,21 +27,24 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 | **Auth** | `/login`, `/register`; protected `/`; session persists on refresh; **`ensure_workspace_for_user`** RPC |
 | **Workspace** | Auto-created on first sign-in; rows in `workspaces` + `workspace_members` |
 | **Invites** | `/invites` — admin invite/revoke; invitee signs in with **invited email** and **Accept** (no invite email sent by the app) |
-| **Planner** | **Sprints + tasks** → Supabase (`sprints`, `tasks`, workspace-scoped). **Team panel** → `localStorage` only |
-| **Permissions** | Role badge; members manage tasks only; admins manage sprints; RLS errors surfaced via `src/lib/supabaseErrors.ts` |
+| **Planner** | **Sprints + tasks** → Supabase; **team roster** → `workspace_profiles` (shared display names, `assignee_user_id`) |
+| **Projects** | Table + RLS in Postgres; **UI coming in V2.2 PR 3** — [docs/scope.md](./docs/scope.md) (Option A: real project grouping) |
+| **Permissions** | Role badge; members CRUD tasks; admins manage projects/sprints/invites; RLS via `supabaseErrors.ts` |
+| **About** | `/about` — stack, links, product hierarchy ([AboutPage](./src/pages/AboutPage.tsx)) |
 | **Deploy** | **Live** on Vercel — [Deployment (Vercel)](#deployment-vercel) |
-| **Not in UI yet** | `projects` table; `doing` column in DB (UI uses todo/done toggle) |
-| **Post-V2 optional** | Next.js migration; team panel in Postgres — [docs/v2.md § Optional follow-ups](./docs/v2.md#optional-follow-ups-not-v2) |
+| **V2.2 in progress** | Task tracker (statuses/dates/Done view), projects selector, matrix-green theme — [docs/v2.2.md](./docs/v2.2.md) |
+| **Post-V2 optional** | Next.js migration; invite email — [docs/v2.md § Optional follow-ups](./docs/v2.md#optional-follow-ups-not-v2) |
 
 ---
 
 ## Features (today)
 
 - Sprint CRUD and switcher (stored in **Supabase**)
-- Tasks with priority, complete toggle, assignee tags (tasks in **Supabase**; assignee links to local team list)
-- Team sidebar (local names/roles for display)
-- Stats strip; retro terminal styling
+- Tasks with priority, complete toggle, assignee by workspace member (`assignee_user_id`)
+- Team sidebar from **Supabase** (`workspace_profiles`)
+- Stats strip; V2.1 ink/purple planner UI (V2.2 adds matrix-green refinement)
 - Multi-user workspace + email invites
+- **About** page at `/about`
 
 ---
 
@@ -113,7 +118,7 @@ Maintainer test plans: [docs/v2.md](./docs/v2.md) (Phases 1–3, Planner slice).
 1. Register or sign in → planner loads.
 2. Hard refresh → still signed in, still on planner.
 3. Create sprint + task → rows appear in Supabase **`sprints`** / **`tasks`**.
-4. Open `/login` and `/invites` directly (no 404).
+4. Open `/login`, `/invites`, and `/about` directly (no 404).
 5. Optional: `/invites` flow with two accounts (no invite email — invitee must register with the invited email).
 
 **Local:** same steps at http://localhost:3000 after `.env.local` + migrations (add localhost URLs in Supabase if you develop locally).
