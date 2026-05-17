@@ -50,7 +50,12 @@ const AboutPage: React.FC = () => {
                         </li>
                         <li>
                             <a href={ABOUT_LINKS.repo} target="_blank" rel="noreferrer">
-                                GitHub repository
+                                Project repository (GitHub)
+                            </a>
+                        </li>
+                        <li>
+                            <a href={ABOUT_LINKS.githubProfile} target="_blank" rel="noreferrer">
+                                Maintainer GitHub profile
                             </a>
                         </li>
                         <li>
