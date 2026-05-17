@@ -28,17 +28,18 @@ Web-based sprint planning and tasks for small teams. **V2 is shipped** on **Crea
 | **Workspace** | Auto-created on first sign-in; rows in `workspaces` + `workspace_members` |
 | **Invites** | `/invites` — admin invite/revoke; invitee signs in with **invited email** and **Accept** (no invite email sent by the app) |
 | **Planner** | **Sprints + tasks** → Supabase; **team roster** → `workspace_profiles` (shared display names, `assignee_user_id`) |
-| **Projects** | Table + RLS in Postgres; **UI coming in V2.2 PR 3** — [docs/scope.md](./docs/scope.md) (Option A: real project grouping) |
+| **Projects** | Admin-managed projects; planner filters sprints/tasks by active project — [docs/scope.md](./docs/scope.md) |
 | **Permissions** | Role badge; members CRUD tasks; admins manage projects/sprints/invites; RLS via `supabaseErrors.ts` |
 | **About** | `/about` — stack, links, product hierarchy ([AboutPage](./src/pages/AboutPage.tsx)) |
 | **Deploy** | **Live** on Vercel — [Deployment (Vercel)](#deployment-vercel) |
-| **V2.2 in progress** | Task tracker (statuses/dates/Done view), projects selector, matrix-green theme — [docs/v2.2.md](./docs/v2.2.md) |
+| **V2.2 in progress** | Matrix-green theme + polish (PR 4–5) — [docs/v2.2.md](./docs/v2.2.md) |
 | **Post-V2 optional** | Next.js migration; invite email — [docs/v2.md § Optional follow-ups](./docs/v2.md#optional-follow-ups-not-v2) |
 
 ---
 
 ## Features (today)
 
+- **Project** CRUD and switcher (admins); sprints scoped to active project
 - Sprint CRUD and switcher (stored in **Supabase**)
 - Tasks with status (todo / in progress / blocked / done), dates, priority, assignee (`assignee_user_id`)
 - **Done** view at `/done` (completed & archived tasks, restore or delete)
@@ -99,6 +100,7 @@ Run each file once in **SQL Editor** (or `supabase db push` if CLI is linked):
 | 4 | `supabase/migrations/20250517120000_tasks_planner_fields.sql` | `priority`, `assignee_member_id` on `tasks` |
 | 5 | `supabase/migrations/20250518120000_workspace_profiles.sql` | `workspace_profiles`, `tasks.assignee_user_id`, `ensure_workspace_profiles` RPC |
 | 6 | `supabase/migrations/20250519120000_tasks_tracker_fields.sql` | Task statuses, dates, `archived` (V2.2 PR2) |
+| 7 | `supabase/migrations/20250520120000_backfill_general_project.sql` | Backfill `General` project for orphan sprints/tasks (V2.2 PR3) |
 
 **Dashboard checklist**
 

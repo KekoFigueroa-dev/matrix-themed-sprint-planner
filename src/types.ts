@@ -5,9 +5,15 @@ export type WorkspaceRole = 'admin' | 'member';
 
 export type TaskStatus = 'todo' | 'in_progress' | 'blocked' | 'done';
 
+export interface Project {
+  id: string;
+  name: string;
+}
+
 export interface Sprint {
   id: string;
   name: string;
+  projectId: string | null;
 }
 
 export interface Todo {

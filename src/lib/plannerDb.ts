@@ -23,6 +23,7 @@ export interface SprintRow {
     id: string;
     workspace_id: string;
     name: string;
+    project_id: string | null;
 }
 
 export interface TaskUpdatePatch {
@@ -55,13 +56,13 @@ function rowToTodo(row: TaskRow): Todo {
 }
 
 function rowToSprint(row: SprintRow): Sprint {
-    return { id: row.id, name: row.name };
+    return { id: row.id, name: row.name, projectId: row.project_id };
 }
 
 export async function fetchSprints(workspaceId: string): Promise<Sprint[]> {
     const { data, error } = await getSupabase()
         .from('sprints')
-        .select('id, workspace_id, name')
+        .select('id, workspace_id, name, project_id')
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: true });
 
@@ -93,11 +94,15 @@ export async function fetchDoneTasks(workspaceId: string): Promise<Todo[]> {
     return (data as TaskRow[]).map(rowToTodo);
 }
 
-export async function createSprint(workspaceId: string, name: string): Promise<Sprint> {
+export async function createSprint(
+    workspaceId: string,
+    name: string,
+    projectId: string | null
+): Promise<Sprint> {
     const { data, error } = await getSupabase()
         .from('sprints')
-        .insert({ workspace_id: workspaceId, name })
-        .select('id, workspace_id, name')
+        .insert({ workspace_id: workspaceId, name, project_id: projectId })
+        .select('id, workspace_id, name, project_id')
         .single();
 
     if (error) throw new Error(error.message);
@@ -134,6 +139,7 @@ export async function deleteSprintAndTasks(sprintId: string, workspaceId: string
 export async function createTask(
     workspaceId: string,
     sprintId: string,
+    projectId: string | null,
     text: string,
     priority: Priority,
     assigneeUserId?: string,
@@ -145,6 +151,7 @@ export async function createTask(
         .insert({
             workspace_id: workspaceId,
             sprint_id: sprintId,
+            project_id: projectId,
             title: text,
             status: 'todo',
             priority,
@@ -238,6 +245,24 @@ export async function archiveAllDoneTasks(workspaceId: string): Promise<number> 
         .from('tasks')
         .update({ archived: true })
         .eq('workspace_id', workspaceId)
+        .eq('status', 'done')
+        .eq('archived', false)
+        .select('id');
+
+    if (error) throw new Error(error.message);
+    return data?.length ?? 0;
+}
+
+/** Mark completed tasks in a project as archived. */
+export async function archiveDoneTasksForProject(
+    workspaceId: string,
+    projectId: string
+): Promise<number> {
+    const { data, error } = await getSupabase()
+        .from('tasks')
+        .update({ archived: true })
+        .eq('workspace_id', workspaceId)
+        .eq('project_id', projectId)
         .eq('status', 'done')
         .eq('archived', false)
         .select('id');

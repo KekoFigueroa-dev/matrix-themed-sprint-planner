@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Todo, Priority, Sprint, isActivePlannerTask } from '../types';
+import { Todo, Priority, Project, Sprint, isActivePlannerTask } from '../types';
 import TodoItem from '../components/TodoItem';
 import AddTodoForm from '../components/AddTodoForm';
 import { AnimatePresence, motion } from 'framer-motion';
 import TeamPanel from '../components/TeamPanel';
+import ProjectManager from '../components/ProjectManager';
 import SprintManager from '../components/SprintManager';
 import StatsPanel from '../components/StatsPanel';
 import { Link } from 'react-router-dom';
@@ -29,10 +30,38 @@ import {
     updateWorkspaceDisplayName,
     type WorkspaceProfile,
 } from '../lib/teamDb';
+import {
+    assignOrphanSprintsToProject,
+    createProject,
+    deleteProject,
+    fetchProjects,
+    updateProjectName,
+} from '../lib/projectsDb';
 import { Badge, Button, Card, InlineAlert } from '../ui';
 
-function currentSprintStorageKey(workspaceId: string): string {
-    return `planner:currentSprintId:${workspaceId}`;
+function currentProjectStorageKey(workspaceId: string): string {
+    return `planner:currentProjectId:${workspaceId}`;
+}
+
+function currentSprintStorageKey(workspaceId: string, projectId: string): string {
+    return `planner:currentSprintId:${workspaceId}:${projectId}`;
+}
+
+function sprintsForProject(sprints: Sprint[], projectId: string | null): Sprint[] {
+    if (!projectId) return [];
+    return sprints.filter((s) => s.projectId === projectId);
+}
+
+function pickSprintId(
+    projectSprints: Sprint[],
+    workspaceId: string,
+    projectId: string
+): string | null {
+    if (projectSprints.length === 0) return null;
+    const savedId = localStorage.getItem(currentSprintStorageKey(workspaceId, projectId));
+    const validSaved =
+        savedId && projectSprints.some((s) => s.id === savedId) ? savedId : null;
+    return validSaved ?? projectSprints[0]?.id ?? null;
 }
 
 const PlannerPage: React.FC = () => {
@@ -46,9 +75,11 @@ const PlannerPage: React.FC = () => {
 
     const isAdmin = workspaceRole === 'admin';
 
+    const [projects, setProjects] = useState<Project[]>([]);
     const [sprints, setSprints] = useState<Sprint[]>([]);
     const [todos, setTodos] = useState<Todo[]>([]);
     const [teamProfiles, setTeamProfiles] = useState<WorkspaceProfile[]>([]);
+    const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
     const [currentSprintId, setCurrentSprintId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -66,9 +97,11 @@ const PlannerPage: React.FC = () => {
                 setPlannerError('No workspace found. Sign out and sign in again to bootstrap your workspace.');
                 setWorkspaceId(null);
                 setWorkspaceRole(null);
+                setProjects([]);
                 setSprints([]);
                 setTodos([]);
                 setTeamProfiles([]);
+                setCurrentProjectId(null);
                 setCurrentSprintId(null);
                 setMemberAwaitingSprint(false);
                 return;
@@ -76,15 +109,32 @@ const PlannerPage: React.FC = () => {
             setWorkspaceId(ctx.workspaceId);
             setWorkspaceRole(ctx.role);
 
+            let loadedProjects = await fetchProjects(ctx.workspaceId);
+            if (loadedProjects.length === 0 && ctx.role === 'admin') {
+                const general = await createProject(ctx.workspaceId, 'General');
+                loadedProjects = [general];
+            }
+
             let loadedSprints = await fetchSprints(ctx.workspaceId);
-            if (loadedSprints.length === 0) {
-                if (ctx.role === 'admin') {
-                    const first = await createSprint(ctx.workspaceId, 'Sprint 1');
-                    loadedSprints = [first];
-                    setMemberAwaitingSprint(false);
-                } else {
-                    setMemberAwaitingSprint(true);
+            if (loadedProjects.length > 0) {
+                const defaultProject = loadedProjects[0];
+                const hasOrphans = loadedSprints.some((s) => !s.projectId);
+                if (hasOrphans) {
+                    await assignOrphanSprintsToProject(ctx.workspaceId, defaultProject.id);
+                    loadedSprints = await fetchSprints(ctx.workspaceId);
                 }
+            }
+
+            if (loadedSprints.length === 0 && ctx.role === 'admin' && loadedProjects[0]) {
+                const first = await createSprint(
+                    ctx.workspaceId,
+                    'Sprint 1',
+                    loadedProjects[0].id
+                );
+                loadedSprints = [first];
+                setMemberAwaitingSprint(false);
+            } else if (loadedSprints.length === 0) {
+                setMemberAwaitingSprint(true);
             } else {
                 setMemberAwaitingSprint(false);
             }
@@ -94,14 +144,26 @@ const PlannerPage: React.FC = () => {
                 fetchTasks(ctx.workspaceId),
                 fetchWorkspaceProfiles(ctx.workspaceId),
             ]);
+            setProjects(loadedProjects);
             setSprints(loadedSprints);
             setTodos(loadedTodos);
             setTeamProfiles(loadedProfiles);
 
-            const savedId = localStorage.getItem(currentSprintStorageKey(ctx.workspaceId));
-            const validSaved =
-                savedId && loadedSprints.some((s) => s.id === savedId) ? savedId : null;
-            setCurrentSprintId(validSaved ?? loadedSprints[0]?.id ?? null);
+            const savedProjectId = localStorage.getItem(
+                currentProjectStorageKey(ctx.workspaceId)
+            );
+            const validProjectId =
+                savedProjectId && loadedProjects.some((p) => p.id === savedProjectId)
+                    ? savedProjectId
+                    : loadedProjects[0]?.id ?? null;
+            setCurrentProjectId(validProjectId);
+
+            const projectSprints = sprintsForProject(loadedSprints, validProjectId);
+            setCurrentSprintId(
+                validProjectId
+                    ? pickSprintId(projectSprints, ctx.workspaceId, validProjectId)
+                    : null
+            );
         } catch (e) {
             const msg = errorMessageFromUnknown(e);
             setPlannerError(msg);
@@ -116,9 +178,26 @@ const PlannerPage: React.FC = () => {
     }, [loadPlanner]);
 
     useEffect(() => {
-        if (!workspaceId || !currentSprintId) return;
-        localStorage.setItem(currentSprintStorageKey(workspaceId), currentSprintId);
-    }, [workspaceId, currentSprintId]);
+        if (!workspaceId || !currentProjectId) return;
+        localStorage.setItem(currentProjectStorageKey(workspaceId), currentProjectId);
+    }, [workspaceId, currentProjectId]);
+
+    useEffect(() => {
+        if (!workspaceId || !currentProjectId || !currentSprintId) return;
+        localStorage.setItem(
+            currentSprintStorageKey(workspaceId, currentProjectId),
+            currentSprintId
+        );
+    }, [workspaceId, currentProjectId, currentSprintId]);
+
+    const projectSprints = sprintsForProject(sprints, currentProjectId);
+
+    const handleProjectChange = (projectId: string) => {
+        setCurrentProjectId(projectId);
+        if (!workspaceId) return;
+        const nextSprints = sprintsForProject(sprints, projectId);
+        setCurrentSprintId(pickSprintId(nextSprints, workspaceId, projectId));
+    };
 
     const reportMutationError = (label: string, e: unknown) => {
         const msg = errorMessageFromUnknown(e);
@@ -126,11 +205,60 @@ const PlannerPage: React.FC = () => {
         setActionError(`${label}: ${msg}`);
     };
 
-    const addSprint = async (name: string) => {
+    const addProject = async (name: string) => {
         if (!workspaceId || !isAdmin) return;
         setActionError(null);
         try {
-            const created = await createSprint(workspaceId, name);
+            const created = await createProject(workspaceId, name);
+            setProjects((prev) => [...prev, created]);
+            handleProjectChange(created.id);
+        } catch (e) {
+            reportMutationError('Could not create project', e);
+        }
+    };
+
+    const renameProject = async (id: string, newName: string) => {
+        if (!isAdmin) return;
+        setActionError(null);
+        try {
+            await updateProjectName(id, newName);
+            setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, name: newName } : p)));
+        } catch (e) {
+            reportMutationError('Could not rename project', e);
+        }
+    };
+
+    const deleteProjectHandler = async (id: string) => {
+        if (!workspaceId || !isAdmin) return;
+        setActionError(null);
+        if (projects.length <= 1) {
+            alert('Cannot delete the last project.');
+            return;
+        }
+        try {
+            await deleteProject(id);
+            const remaining = projects.filter((p) => p.id !== id);
+            setProjects(remaining);
+            if (currentProjectId === id) {
+                const nextId = remaining[0]?.id ?? null;
+                setCurrentProjectId(nextId);
+                if (nextId) {
+                    const nextSprints = sprintsForProject(sprints, nextId);
+                    setCurrentSprintId(pickSprintId(nextSprints, workspaceId, nextId));
+                } else {
+                    setCurrentSprintId(null);
+                }
+            }
+        } catch (e) {
+            reportMutationError('Could not delete project', e);
+        }
+    };
+
+    const addSprint = async (name: string) => {
+        if (!workspaceId || !isAdmin || !currentProjectId) return;
+        setActionError(null);
+        try {
+            const created = await createSprint(workspaceId, name, currentProjectId);
             setSprints((prev) => [...prev, created]);
             setCurrentSprintId(created.id);
         } catch (e) {
@@ -152,8 +280,8 @@ const PlannerPage: React.FC = () => {
     const deleteSprint = async (id: string) => {
         if (!workspaceId || !isAdmin) return;
         setActionError(null);
-        if (sprints.length <= 1) {
-            alert('Cannot delete the last sprint.');
+        if (projectSprints.length <= 1) {
+            alert('Cannot delete the last sprint in this project.');
             return;
         }
         try {
@@ -162,7 +290,8 @@ const PlannerPage: React.FC = () => {
             setSprints(remaining);
             setTodos((prev) => prev.filter((t) => t.sprintId !== id));
             if (currentSprintId === id) {
-                setCurrentSprintId(remaining[0]?.id ?? null);
+                const remainingInProject = sprintsForProject(remaining, currentProjectId);
+                setCurrentSprintId(remainingInProject[0]?.id ?? null);
             }
         } catch (e) {
             reportMutationError('Could not delete sprint', e);
@@ -175,12 +304,13 @@ const PlannerPage: React.FC = () => {
         assigneeUserId?: string,
         expectedDeliveryOn?: string | null
     ) => {
-        if (!workspaceId || !currentSprintId) return;
+        if (!workspaceId || !currentSprintId || !currentProjectId) return;
         setActionError(null);
         try {
             const created = await createTask(
                 workspaceId,
                 currentSprintId,
+                currentProjectId,
                 text,
                 priority,
                 assigneeUserId,
@@ -303,9 +433,21 @@ const PlannerPage: React.FC = () => {
                         </InlineAlert>
                     )}
                     <Card className="planner-card planner-sprint">
+                        <h2 className="planner-card__heading">Project</h2>
+                        <ProjectManager
+                            projects={projects}
+                            currentProjectId={currentProjectId}
+                            canManageProjects={isAdmin}
+                            onProjectChange={handleProjectChange}
+                            onAddProject={addProject}
+                            onRenameProject={renameProject}
+                            onDeleteProject={deleteProjectHandler}
+                        />
+                    </Card>
+                    <Card className="planner-card planner-sprint">
                         <h2 className="planner-card__heading">Sprint</h2>
                         <SprintManager
-                            sprints={sprints}
+                            sprints={projectSprints}
                             currentSprintId={currentSprintId}
                             canManageSprints={isAdmin}
                             onSprintChange={setCurrentSprintId}
@@ -321,7 +463,7 @@ const PlannerPage: React.FC = () => {
                         <AddTodoForm
                             addTodo={addTodo}
                             profiles={teamProfiles}
-                            disabled={!currentSprintId}
+                            disabled={!currentSprintId || !currentProjectId}
                         />
                     </Card>
                     <ul className="planner-todo-list">
@@ -344,11 +486,15 @@ const PlannerPage: React.FC = () => {
                                     exit={{ opacity: 0 }}
                                     className="planner-empty"
                                 >
-                                    {sprints.length > 0
+                                    {projectSprints.length > 0
                                         ? 'This sprint is empty. Add a task above.'
-                                        : isAdmin
-                                          ? 'Create a sprint to get started.'
-                                          : 'Waiting for an admin to create a sprint.'}
+                                        : projects.length === 0
+                                          ? isAdmin
+                                            ? 'Create a project to get started.'
+                                            : 'Waiting for an admin to create a project.'
+                                          : isAdmin
+                                            ? 'Create a sprint in this project.'
+                                            : 'No sprints in this project yet.'}
                                 </motion.li>
                             )}
                         </AnimatePresence>
