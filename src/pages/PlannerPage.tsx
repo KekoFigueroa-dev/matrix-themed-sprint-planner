@@ -273,6 +273,9 @@ const PlannerPage: React.FC = () => {
                         <Link to="/invites" className="planner-link">
                             Invites
                         </Link>
+                        <Link to="/about" className="planner-link">
+                            About
+                        </Link>
                         <Button type="button" variant="ghost" onClick={handleSignOut}>
                             Sign out
                         </Button>

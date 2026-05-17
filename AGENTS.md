@@ -4,6 +4,8 @@ This file tells **humans and coding agents** how to work in this repo: **non-neg
 
 **Canonical V2 plan (phases, DoD, entities, flows, hours):** [docs/v2.md](./docs/v2.md) — **update the progress table there** when you finish a phase or meaningful slice.
 
+**V2.2 polish sprint (active):** [docs/v2.2.md](./docs/v2.2.md) — projects UI, task tracker, About, theme. Hierarchy: [docs/scope.md](./docs/scope.md).
+
 **RLS narrative (security model):** [docs/rls.md](./docs/rls.md)
 
 **Human-facing setup / deploy / env:** [README.md](./README.md)

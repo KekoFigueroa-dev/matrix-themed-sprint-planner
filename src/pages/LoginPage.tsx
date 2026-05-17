@@ -64,6 +64,11 @@ const LoginPage: React.FC = () => {
                 <p className="auth-footer">
                     No account? <Link to="/register">Register</Link>
                 </p>
+                <p className="auth-footer auth-footer--about">
+                    <Link to="/about" className="app-footer-link">
+                        About this project
+                    </Link>
+                </p>
             </Card>
         </div>
     );
