@@ -12,7 +12,6 @@ import { Link } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
 import { fetchActiveWorkspaceContext, type WorkspaceRole } from '../lib/workspace';
 import { errorMessageFromUnknown } from '../lib/supabaseErrors';
-import { usePlannerBodyLock } from '../hooks/usePlannerBodyLock';
 import {
     createSprint,
     createTask,
@@ -394,9 +393,6 @@ const PlannerPage: React.FC = () => {
     const filteredTodos = todos.filter(
         (todo) => todo.sprintId === currentSprintId && isActivePlannerTask(todo)
     );
-
-    const showPlannerLayout = !plannerLoading;
-    usePlannerBodyLock(showPlannerLayout);
 
     const handleSignOut = async () => {
         await getSupabase().auth.signOut();

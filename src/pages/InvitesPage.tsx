@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
 import { errorMessageFromUnknown } from '../lib/supabaseErrors';
+import { useSingleFlight } from '../lib/submitGuard';
 import { Badge, Button, Card, EmptyState, InlineAlert, Input, Select } from '../ui';
 import type { Session } from '@supabase/supabase-js';
 
@@ -39,6 +40,7 @@ const InvitesPage: React.FC = () => {
     const [inviteRole, setInviteRole] = useState<InviteRole>('member');
 
     const [invitesVisible, setInvitesVisible] = useState<InviteRow[]>([]);
+    const { tryBegin, end } = useSingleFlight();
 
     const signedInEmail = session?.user?.email ?? '';
 
@@ -140,9 +142,13 @@ const InvitesPage: React.FC = () => {
 
     const handleCreateInvite = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!tryBegin()) return;
         setError(null);
         const email = normalizeEmail(inviteEmail);
-        if (!email || !selectedWorkspaceId || !session?.user) return;
+        if (!email || !selectedWorkspaceId || !session?.user) {
+            end();
+            return;
+        }
 
         setActionLoading('create');
         try {
@@ -160,6 +166,7 @@ const InvitesPage: React.FC = () => {
             setInviteEmail('');
             await refreshInvites();
         } finally {
+            end();
             setActionLoading(null);
         }
     };

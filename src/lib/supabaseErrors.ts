@@ -6,13 +6,31 @@ const NETWORK_HINT =
 
 const SESSION_HINT = 'Your session may have expired. Sign out, sign in again, and retry.';
 
-/** Map PostgREST / RLS failures to copy suitable for the UI. */
-export function formatSupabaseError(message: string): string {
+const RATE_LIMIT_HINT =
+    'Rate limited. Wait about 30–60 seconds, then try again once. Avoid double-clicking submit.';
+
+/** Map PostgREST / RLS / Auth failures to copy suitable for the UI. */
+export function formatSupabaseError(message: string, status?: number): string {
     const lower = message.toLowerCase();
     const trimmed = message.trim();
 
+    if (!trimmed && status === 429) {
+        return RATE_LIMIT_HINT;
+    }
+
     if (!trimmed) {
         return 'Something went wrong. Try again in a moment.';
+    }
+
+    if (
+        status === 429 ||
+        lower.includes('rate limit') ||
+        lower.includes('too many requests') ||
+        lower.includes('over_email_send_rate_limit') ||
+        lower.includes('over_request_rate_limit') ||
+        lower.includes('email rate limit')
+    ) {
+        return RATE_LIMIT_HINT;
     }
 
     if (
@@ -41,6 +59,9 @@ export function formatSupabaseError(message: string): string {
     }
 
     if (lower.includes('duplicate') || lower.includes('unique constraint')) {
+        if (lower.includes('invites_workspace_email')) {
+            return 'An invite for that email already exists in this workspace.';
+        }
         return 'That name or record already exists. Try something different.';
     }
 
@@ -59,9 +80,22 @@ export function formatSupabaseError(message: string): string {
     return message;
 }
 
+function statusFromUnknown(e: unknown): number | undefined {
+    if (e && typeof e === 'object' && 'status' in e) {
+        const status = (e as { status?: unknown }).status;
+        if (typeof status === 'number') return status;
+    }
+    return undefined;
+}
+
 export function errorMessageFromUnknown(e: unknown): string {
     const raw = e instanceof Error ? e.message : String(e);
-    return formatSupabaseError(raw);
+    return formatSupabaseError(raw, statusFromUnknown(e));
+}
+
+/** Auth API errors (signUp, signInWithPassword). */
+export function formatAuthError(error: { message: string; status?: number }): string {
+    return formatSupabaseError(error.message, error.status);
 }
 
 /** Prefix a mutation label only when the formatted message is not already prefixed. */

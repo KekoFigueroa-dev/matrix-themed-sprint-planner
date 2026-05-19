@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import ConfigMissingPage from './pages/ConfigMissingPage';
@@ -18,13 +18,21 @@ const SessionRoutes: React.FC = () => {
     const [ready, setReady] = useState(false);
     const [workspaceBootstrapError, setWorkspaceBootstrapError] = useState<string | null>(null);
 
+    const ensureWorkspaceInFlight = useRef(false);
+
     const runEnsureWorkspace = useCallback(async () => {
-        const { error } = await getSupabase().rpc('ensure_workspace_for_user');
-        if (error) {
-            console.error('ensure_workspace_for_user:', error.message);
-            setWorkspaceBootstrapError(error.message);
-        } else {
-            setWorkspaceBootstrapError(null);
+        if (ensureWorkspaceInFlight.current) return;
+        ensureWorkspaceInFlight.current = true;
+        try {
+            const { error } = await getSupabase().rpc('ensure_workspace_for_user');
+            if (error) {
+                console.error('ensure_workspace_for_user:', error.message);
+                setWorkspaceBootstrapError(error.message);
+            } else {
+                setWorkspaceBootstrapError(null);
+            }
+        } finally {
+            ensureWorkspaceInFlight.current = false;
         }
     }, []);
 
