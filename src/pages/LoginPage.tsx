@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
+import { formatAuthError } from '../lib/supabaseErrors';
+import { useSingleFlight } from '../lib/submitGuard';
 import { Button, Card, InlineAlert, Input } from '../ui';
 
 const LoginPage: React.FC = () => {
@@ -9,9 +11,11 @@ const LoginPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const { tryBegin, end } = useSingleFlight();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!tryBegin()) return;
         setError(null);
         setLoading(true);
         try {
@@ -20,11 +24,12 @@ const LoginPage: React.FC = () => {
                 password,
             });
             if (signErr) {
-                setError(signErr.message);
+                setError(formatAuthError(signErr));
                 return;
             }
             navigate('/', { replace: true });
         } finally {
+            end();
             setLoading(false);
         }
     };

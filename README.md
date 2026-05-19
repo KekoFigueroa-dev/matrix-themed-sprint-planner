@@ -103,6 +103,7 @@ Run each file once in **SQL Editor** (or `supabase db push` if CLI is linked):
 | 5 | `supabase/migrations/20250518120000_workspace_profiles.sql` | `workspace_profiles`, `tasks.assignee_user_id`, `ensure_workspace_profiles` RPC |
 | 6 | `supabase/migrations/20250519120000_tasks_tracker_fields.sql` | Task statuses, dates, `archived` (V2.2 PR2) |
 | 7 | `supabase/migrations/20250520120000_backfill_general_project.sql` | Backfill `General` project for orphan sprints/tasks (V2.2 PR3) |
+| 8 | `supabase/migrations/20250521120000_invites_workspace_email_unique.sql` | One invite per email per workspace (unique index) |
 
 **Dashboard checklist**
 
@@ -278,6 +279,7 @@ Full checklist: [docs/v2.md § Phase 5 — Maintainer test plan](./docs/v2.md#ph
 
 | Symptom | Likely cause |
 |---------|----------------|
+| “Rate limited” on register or sign-in | Supabase Auth throttling — wait ~30–60s; if it persists after one calm retry, check Auth rate limits in the Supabase dashboard |
 | CORS / NetworkError, status `(null)` | Wrong `REACT_APP_SUPABASE_URL` in Vercel env (hostname typo) |
 | `Invalid API key` (401) | Wrong or truncated publishable/anon key; or **Preview** env not updated |
 | Old URL/key after fix | Browser cache — hard refresh or private window; confirm new `main.*.js` in Network |

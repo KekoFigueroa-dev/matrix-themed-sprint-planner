@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getSupabase } from '../lib/supabaseClient';
+import { formatAuthError } from '../lib/supabaseErrors';
+import { useSingleFlight } from '../lib/submitGuard';
 import { Button, Card, InlineAlert, Input } from '../ui';
 
 const RegisterPage: React.FC = () => {
@@ -10,9 +12,11 @@ const RegisterPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [info, setInfo] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const { tryBegin, end } = useSingleFlight();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!tryBegin()) return;
         setError(null);
         setInfo(null);
         setLoading(true);
@@ -22,7 +26,7 @@ const RegisterPage: React.FC = () => {
                 password,
             });
             if (signErr) {
-                setError(signErr.message);
+                setError(formatAuthError(signErr));
                 return;
             }
             if (data.session) {
@@ -31,6 +35,7 @@ const RegisterPage: React.FC = () => {
             }
             setInfo('Check your email to confirm your account (if confirmations are enabled), then sign in.');
         } finally {
+            end();
             setLoading(false);
         }
     };
